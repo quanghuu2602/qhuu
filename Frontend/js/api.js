@@ -115,3 +115,16 @@ const reservationApi = {
     confirm: (id) =>
         callApi(`/reservations/${id}/confirm`, 'PATCH'),
 };
+const tableApi = {
+    // Lấy tất cả bàn theo khu vực
+    getAreas: () =>
+        callApi('/tables/areas'),
+
+    // Cập nhật trạng thái bàn
+    updateStatus: (id, status) =>
+        callApi(`/tables/${id}/status`, 'PATCH', { status }),
+
+    // Lấy bàn trống (Customer dùng)
+    getAvailable: () =>
+        callApi('/tables/available'),
+};

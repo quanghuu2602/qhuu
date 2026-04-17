@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Sơ đồ bàn — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- Sidebar Staff -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p id="roleLabel">Nhân viên</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="dashboard-staff.html">
+                <span class="nav-icon">📊</span> Tổng quan
+            </a>
+            <a class="nav-item active" href="table-map.html">
+                <span class="nav-icon">🪑</span> Sơ đồ bàn
+            </a>
+            <a class="nav-item" href="order-new.html">
+                <span class="nav-icon">📋</span> Gọi món
+            </a>
+            <a class="nav-item" href="checkout.html">
+                <span class="nav-icon">💳</span> Thanh toán
+            </a>
+            <a class="nav-item" href="reservations-staff.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role" id="sidebarRole">Nhân viên</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;
+                    align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:12px;">
+            <div>
+                <div class="page-title">Sơ đồ bàn</div>
+                <div class="page-sub">Click vào bàn để xem tuỳ chọn</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="realtime-badge">
+                    <span class="realtime-dot"></span>
+                    Cập nhật tự động
+                </span>
+                <button onclick="loadTables()"
+                    style="padding:8px 16px;border-radius:10px;
+                           border:1.5px solid #e0e0e0;background:#fff;
+                           font-size:13px;cursor:pointer;font-family:inherit;
+                           font-weight:600;color:#555;">
+                    🔄 Làm mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="table-stats">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#f0fdf4;">🪑</div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statTotal" style="color:#1a1a2e;">0</div>
+                    <div class="stat-label">Tổng bàn</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#f0fdf4;">✅</div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statAvail" style="color:#16a34a;">0</div>
+                    <div class="stat-label">Còn trống</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fef2f2;">🍽</div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statOccup" style="color:#dc2626;">0</div>
+                    <div class="stat-label">Đang phục vụ</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#fffbeb;">📅</div>
+                <div class="stat-info">
+                    <div class="stat-num" id="statReserv" style="color:#d97706;">0</div>
+                    <div class="stat-label">Đã đặt trước</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="table-toolbar">
+            <div class="area-tabs" id="areaTabs"></div>
+            <div class="table-legend">
+                <div class="legend-item">
+                    <div class="legend-dot"
+                         style="background:#16a34a;"></div> Trống
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot"
+                         style="background:#dc2626;"></div> Đang phục vụ
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot"
+                         style="background:#d97706;"></div> Đã đặt trước
+                </div>
+            </div>
+        </div>
+
+        <!-- Map -->
+        <div class="table-map-wrap" id="tableMap">
+            <div style="text-align:center;padding:60px;color:#ccc;">
+                <div style="font-size:48px;margin-bottom:12px;">⏳</div>
+                <p>Đang tải sơ đồ bàn...</p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Action Panel (slide up khi click bàn) -->
+<div class="table-action-panel" id="actionPanel">
+    <button class="panel-close" onclick="closePanel()">×</button>
+
+    <div class="action-table-info">
+        <div class="action-table-name" id="panelTableName">—</div>
+        <div class="action-table-sub"  id="panelTableSub">—</div>
+    </div>
+
+    <div class="action-btns" id="panelActionBtns"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Admin', 'Staff');
+
+const role = getRole();
+document.getElementById('sidebarName').textContent = getFullName();
+document.getElementById('sidebarRole').textContent =
+    role === 'Admin' ? 'Quản trị viên' : 'Nhân viên phục vụ';
+document.getElementById('roleLabel').textContent =
+    role === 'Admin' ? 'Quản trị viên' : 'Nhân viên phục vụ';
+
+// ── State ─────────────────────────────────────────────────────
+let allAreas      = [];
+let activeAreaId  = null;
+let selectedTable = null;
+let autoReload    = null;
+
+// ── Emoji theo khu vực ────────────────────────────────────────
+function areaEmoji(name) {
+    if (name.includes('Sân')) return '🌿';
+    if (name.includes('VIP')) return '👑';
+    if (name.includes('2'))   return '🏢';
+    return '🏠';
+}
+
+// ── Khởi động + auto reload 30s ──────────────────────────────
+async function init() {
+    await loadTables();
+    autoReload = setInterval(loadTables, 30000);
+}
+
+// ── Load dữ liệu bàn ─────────────────────────────────────────
+async function loadTables() {
+    try {
+        allAreas = await tableApi.getAreas();
+        updateStats();
+        renderAreaTabs();
+        renderMap();
+    } catch(e) {
+        document.getElementById('tableMap').innerHTML = `
+            <div style="text-align:center;padding:60px;color:#ccc;">
+                <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+                <p style="font-size:15px;color:#999;">Không tải được dữ liệu</p>
+                <p style="font-size:13px;">${e.message}</p>
+            </div>`;
+    }
+}
+
+// ── Cập nhật số liệu thống kê ─────────────────────────────────
+function updateStats() {
+    const allTables = allAreas.flatMap(a => a.tables);
+    document.getElementById('statTotal').textContent  = allTables.length;
+    document.getElementById('statAvail').textContent  =
+        allTables.filter(t => t.status === 'Available').length;
+    document.getElementById('statOccup').textContent  =
+        allTables.filter(t => t.status === 'Occupied').length;
+    document.getElementById('statReserv').textContent =
+        allTables.filter(t => t.status === 'Reserved').length;
+}
+
+// ── Render tabs khu vực ───────────────────────────────────────
+function renderAreaTabs() {
+    const container = document.getElementById('areaTabs');
+    let html = `
+        <button class="area-tab ${activeAreaId === null ? 'active' : ''}"
+                onclick="filterArea(null, this)">
+            🗺 Tất cả khu vực
+        </button>`;
+    allAreas.forEach(a => {
+        const counts = a.tables.length;
+        const free   = a.tables.filter(t => t.status === 'Available').length;
+        html += `
+        <button class="area-tab ${activeAreaId === a.id ? 'active' : ''}"
+                onclick="filterArea(${a.id}, this)">
+            ${areaEmoji(a.name)} ${a.name}
+            <span style="
+                background:rgba(255,255,255,0.25);
+                border-radius:50px;padding:0 7px;
+                font-size:10px;margin-left:4px;">
+                ${free}/${counts}
+            </span>
+        </button>`;
+    });
+    container.innerHTML = html;
+}
+
+// ── Filter theo khu vực ───────────────────────────────────────
+function filterArea(areaId, el) {
+    activeAreaId = areaId;
+    document.querySelectorAll('.area-tab')
+            .forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderMap();
+}
+
+// ── Render sơ đồ bàn ─────────────────────────────────────────
+function renderMap() {
+    const map        = document.getElementById('tableMap');
+    const areasToShow = activeAreaId
+        ? allAreas.filter(a => a.id === activeAreaId)
+        : allAreas;
+
+    if (!areasToShow.length) {
+        map.innerHTML = `<div style="text-align:center;padding:60px;
+                                     color:#ccc;font-size:15px;">
+                             Không có dữ liệu
+                         </div>`;
+        return;
+    }
+
+    map.innerHTML = areasToShow.map(area => `
+        <div class="map-area-label">
+            ${areaEmoji(area.name)} ${area.name}
+            <span style="font-size:10px;color:#ddd;font-weight:400;">
+                — ${area.tables.length} bàn
+            </span>
+        </div>
+        <div class="table-grid">
+            ${area.tables.map(t => buildTableCard(t)).join('')}
+        </div>
+    `).join('');
+}
+
+// ── Build HTML một card bàn ───────────────────────────────────
+function buildTableCard(table) {
+    const st      = table.status.toLowerCase(); // available | occupied | reserved
+    const isLarge = table.capacity >= 6;
+
+    // Hiển thị ghế xung quanh
+    const chairsHtml = buildChairs(table.capacity, st);
+
+    // Hình bàn: chữ nhật nếu >= 6 chỗ, tròn nếu nhỏ hơn
+    const shapeHtml = isLarge
+        ? `<div class="table-shape-rect ${st}">🍽</div>${chairsHtml}`
+        : `<div class="table-shape-round ${st}">🍽</div>${chairsHtml}`;
+
+    // Label trạng thái
+    const statusLabel = {
+        available: 'Còn trống',
+        occupied:  'Đang phục vụ',
+        reserved:  'Đã đặt trước',
+    }[st] || st;
+
+    return `
+    <div class="table-card ${st}"
+         onclick="selectTable(${JSON.stringify(table).replace(/"/g, '&quot;')})">
+        <div class="table-icon" style="position:relative;
+             width:${isLarge ? '80px' : '60px'};height:60px;
+             margin:0 auto 10px;">
+            ${shapeHtml}
+        </div>
+        <div class="table-name">${table.name}</div>
+        <div class="table-capacity">👤 ${table.capacity} chỗ</div>
+        <span class="table-status-badge ${st}">${statusLabel}</span>
+    </div>`;
+}
+
+// ── Vẽ ghế xung quanh bàn ────────────────────────────────────
+function buildChairs(capacity, status) {
+    const count = Math.min(capacity, 8);
+    let chairs  = '';
+
+    for (let i = 0; i < count; i++) {
+        const angle   = (i / count) * 360;
+        const rad     = angle * (Math.PI / 180);
+        const radius  = 30;
+        const cx      = 30 + radius * Math.sin(rad);
+        const cy      = 30 - radius * Math.cos(rad);
+
+        chairs += `<div class="chair ${status}"
+                        style="
+                            position:absolute;
+                            left:${cx - 5}px;
+                            top:${cy - 5}px;
+                            transform:rotate(${angle}deg);
+                        ">
+                   </div>`;
+    }
+    return `<div class="chairs">${chairs}</div>`;
+}
+
+// ── Click vào bàn → mở action panel ──────────────────────────
+function selectTable(table) {
+    selectedTable = table;
+    const st = table.status.toLowerCase();
+
+    document.getElementById('panelTableName').textContent =
+        table.name;
+    document.getElementById('panelTableSub').textContent =
+        `${table.areaName} · ${table.capacity} chỗ · ${
+            st === 'available' ? 'Còn trống' :
+            st === 'occupied'  ? 'Đang phục vụ' : 'Đã đặt trước'
+        }`;
+
+    // Các nút action tuỳ theo trạng thái
+    const btns = buildActionBtns(table);
+    document.getElementById('panelActionBtns').innerHTML = btns;
+    document.getElementById('actionPanel').classList.add('open');
+}
+
+function buildActionBtns(table) {
+    const st = table.status.toLowerCase();
+    let html = '';
+
+    if (st === 'available') {
+        html += `
+        <button class="action-btn action-btn-green"
+                onclick="openOrder(${table.id})">
+            📋 Mở Order mới
+        </button>
+        <button class="action-btn action-btn-yellow"
+                onclick="changeStatus(${table.id}, 'Reserved')">
+            📅 Đánh dấu đã đặt
+        </button>`;
+    }
+
+    if (st === 'occupied') {
+        html += `
+        <button class="action-btn action-btn-blue"
+                onclick="viewOrder(${table.id})">
+            👁 Xem Order
+        </button>
+        <button class="action-btn action-btn-green"
+                onclick="goCheckout(${table.id})">
+            💳 Thanh toán
+        </button>
+        <button class="action-btn action-btn-gray"
+                onclick="changeStatus(${table.id}, 'Available')">
+            ✓ Giải phóng bàn
+        </button>`;
+    }
+
+    if (st === 'reserved') {
+        html += `
+        <button class="action-btn action-btn-green"
+                onclick="changeStatus(${table.id}, 'Occupied')">
+            ✅ Khách đã đến
+        </button>
+        <button class="action-btn action-btn-gray"
+                onclick="changeStatus(${table.id}, 'Available')">
+            ✗ Huỷ đặt trước
+        </button>`;
+    }
+
+    html += `
+    <button class="action-btn action-btn-gray"
+            onclick="closePanel()">
+        Đóng
+    </button>`;
+
+    return html;
+}
+
+// ── Đổi trạng thái bàn ───────────────────────────────────────
+async function changeStatus(tableId, newStatus) {
+    try {
+        await tableApi.updateStatus(tableId, newStatus);
+        const label = {
+            Available: 'Còn trống',
+            Occupied:  'Đang phục vụ',
+            Reserved:  'Đã đặt trước',
+        }[newStatus];
+        showToast(`Cập nhật bàn → ${label}`, 'success');
+        closePanel();
+        await loadTables();
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// ── Mở order mới ─────────────────────────────────────────────
+function openOrder(tableId) {
+    // Đổi trạng thái sang Occupied rồi redirect
+    changeStatus(tableId, 'Occupied').then(() => {
+        localStorage.setItem('currentTableId',   tableId);
+        localStorage.setItem('currentTableName', selectedTable?.name || '');
+        window.location.href = 'order-new.html';
+    });
+}
+
+function viewOrder(tableId) {
+    localStorage.setItem('currentTableId', tableId);
+    window.location.href = 'order-new.html';
+}
+
+function goCheckout(tableId) {
+    localStorage.setItem('currentTableId', tableId);
+    window.location.href = 'checkout.html';
+}
+
+function closePanel() {
+    document.getElementById('actionPanel').classList.remove('open');
+    selectedTable = null;
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Đóng panel khi nhấn Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closePanel();
+});
+
+init();
+</script>
+</body>
+</html>

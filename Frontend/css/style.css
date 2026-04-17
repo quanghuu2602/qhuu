@@ -795,3 +795,526 @@ body {
     min-width: 32px;
     text-align: center;
 }
+/* ════════════════════════════════════════
+   TABLE MAP
+════════════════════════════════════════ */
+
+/* Toolbar */
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.area-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.area-tab {
+    padding: 8px 18px;
+    border-radius: 50px;
+    border: 1.5px solid #e0e0e0;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    color: #666;
+}
+
+.area-tab:hover  { border-color: #4f46e5; color: #4f46e5; }
+.area-tab.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+
+/* Legend */
+.table-legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
+
+/* Stats bar */
+.table-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.stat-info { flex: 1; }
+
+.stat-num {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 3px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #999;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* Map canvas */
+.table-map-wrap {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #f0f0f0;
+    padding: 28px;
+    min-height: 480px;
+    position: relative;
+}
+
+.map-area-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #bbb;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1.5px dashed #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+/* Table card */
+.table-card {
+    border-radius: 14px;
+    padding: 18px 14px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    text-align: center;
+    border: 2px solid transparent;
+    user-select: none;
+}
+
+.table-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.table-card:active { transform: scale(0.97); }
+
+/* Màu theo trạng thái */
+.table-card.available {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-color: #86efac;
+}
+
+.table-card.occupied {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border-color: #fca5a5;
+}
+
+.table-card.reserved {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border-color: #fcd34d;
+}
+
+/* Table icon (hình bàn SVG) */
+.table-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 10px;
+    position: relative;
+}
+
+/* Bàn tròn */
+.table-shape-round {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin: 6px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+    position: relative;
+}
+
+.table-shape-round.available { background: #16a34a; }
+.table-shape-round.occupied  { background: #dc2626; }
+.table-shape-round.reserved  { background: #d97706; }
+
+/* Ghế xung quanh bàn */
+.chairs {
+    position: absolute;
+    inset: 0;
+}
+
+.chair {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    opacity: 0.7;
+}
+
+.chair.available { background: #16a34a; }
+.chair.occupied  { background: #dc2626; }
+.chair.reserved  { background: #d97706; }
+
+/* Bàn chữ nhật (cho bàn lớn) */
+.table-shape-rect {
+    width: 68px;
+    height: 38px;
+    border-radius: 8px;
+    margin: 9px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+}
+
+.table-shape-rect.available { background: #16a34a; }
+.table-shape-rect.occupied  { background: #dc2626; }
+.table-shape-rect.reserved  { background: #d97706; }
+
+.table-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 3px;
+}
+
+.table-capacity {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.table-status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 50px;
+    letter-spacing: 0.3px;
+}
+
+.table-status-badge.available {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.table-status-badge.occupied {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.table-status-badge.reserved {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+/* Pulse animation cho bàn occupied */
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.3); }
+    50%       { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+}
+
+.table-card.occupied .table-shape-round,
+.table-card.occupied .table-shape-rect {
+    animation: pulse-red 2.5s ease-in-out infinite;
+}
+
+/* Action panel khi click bàn */
+.table-action-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+    padding: 16px 24px;
+    z-index: 500;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.table-action-panel.open {
+    transform: translateY(0);
+}
+
+.action-table-info { flex: 1; min-width: 200px; }
+
+.action-table-name {
+    font-size: 17px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 2px;
+}
+
+.action-table-sub {
+    font-size: 13px;
+    color: #888;
+}
+
+.action-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-btn-green  { background: #dcfce7; color: #15803d; }
+.action-btn-red    { background: #fee2e2; color: #b91c1c; }
+.action-btn-yellow { background: #fef3c7; color: #b45309; }
+.action-btn-blue   { background: #eff6ff; color: #1d4ed8; }
+.action-btn-gray   { background: #f5f5f5; color: #555; }
+
+.action-btn:hover { filter: brightness(0.92); transform: scale(0.98); }
+
+.panel-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid #e0e0e0;
+    background: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    flex-shrink: 0;
+}
+
+/* Realtime badge */
+.realtime-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+    border-radius: 50px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.realtime-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #16a34a;
+    animation: pulse-green 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+/* ════════════════════════════════════════
+   MY RESERVATIONS
+════════════════════════════════════════ */
+.reservation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.reservation-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 22px;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    transition: box-shadow 0.2s;
+}
+
+.reservation-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.res-date-box {
+    width: 58px;
+    height: 62px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #f0f0ff;
+    border: 1.5px solid #e0e7ff;
+}
+
+.res-date-day {
+    font-size: 22px;
+    font-weight: 800;
+    color: #4f46e5;
+    line-height: 1;
+}
+
+.res-date-mon {
+    font-size: 10px;
+    font-weight: 700;
+    color: #818cf8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.res-info { flex: 1; min-width: 0; }
+
+.res-code {
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4f46e5;
+    background: #eff6ff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.res-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 3px;
+}
+
+.res-detail {
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.res-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 50px;
+    flex-shrink: 0;
+}
+
+.res-status.confirmed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.res-status.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.res-cancel-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1.5px solid #fecaca;
+    background: #fff5f5;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.res-cancel-btn:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+.empty-reservations {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #f0f0f0;
+}
+
+.empty-reservations .icon { font-size: 56px; margin-bottom: 16px; }
+.empty-reservations h3 {
+    font-size: 17px;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+.empty-reservations p {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 20px;
+}

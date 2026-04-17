@@ -382,8 +382,11 @@ async function submitBooking() {
 // ── Hiện kết quả thành công ───────────────────────────────────
 function showSuccess(data) {
     // Step indicator
-    document.getElementById('step1-indicator').classList.replace('active','done');
-    document.getElementById('step2-indicator').classList.replace('','done');
+    document.getElementById('step1-indicator').classList.remove('active');
+    document.getElementById('step1-indicator').classList.add('done');
+
+    document.getElementById('step2-indicator').classList.add('done');      // ✅ không replace nữa
+
     document.getElementById('step3-indicator').classList.add('active');
 
     document.getElementById('resultCode').textContent  = data.bookingCode;

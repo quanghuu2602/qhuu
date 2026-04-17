@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt bàn của tôi — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Khách hàng</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="dashboard-customer.html">
+                <span class="nav-icon">🏠</span> Trang chủ
+            </a>
+            <a class="nav-item" href="menu-public.html">
+                <span class="nav-icon">🍜</span> Thực đơn
+            </a>
+            <a class="nav-item" href="booking.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+            <a class="nav-item active" href="my-reservations.html">
+                <span class="nav-icon">📋</span> Đặt bàn của tôi
+            </a>
+            <a class="nav-item" href="profile.html">
+                <span class="nav-icon">👤</span> Tài khoản
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role">Khách hàng</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div style="display:flex;justify-content:space-between;
+                    align-items:center;margin-bottom:6px;">
+            <div>
+                <div class="page-title">Đặt bàn của tôi</div>
+                <div class="page-sub" id="resCount">Đang tải...</div>
+            </div>
+            <a href="booking.html" class="btn btn-primary"
+               style="width:auto;">
+                + Đặt bàn mới
+            </a>
+        </div>
+
+        <!-- Filter -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <button class="cat-tab active"
+                    onclick="filterStatus('all', this)">
+                Tất cả
+            </button>
+            <button class="cat-tab"
+                    onclick="filterStatus('pending', this)">
+                ⏳ Chờ xác nhận
+            </button>
+            <button class="cat-tab"
+                    onclick="filterStatus('confirmed', this)">
+                ✅ Đã xác nhận
+            </button>
+        </div>
+
+        <!-- List -->
+        <div class="reservation-list" id="resList">
+            <div class="empty-reservations">
+                <div class="icon">⏳</div>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal xác nhận huỷ -->
+<div class="modal-overlay" id="cancelModal">
+    <div class="modal-box" style="max-width:400px;">
+        <div class="modal-header">
+            <span class="modal-title">Huỷ đặt bàn</span>
+            <button class="modal-close"
+                    onclick="closeCancelModal()">×</button>
+        </div>
+        <p style="font-size:14px;color:#555;margin-bottom:8px;">
+            Bạn có chắc muốn huỷ đặt bàn này không?
+        </p>
+        <div style="background:#fff8f8;border:1px solid #fecaca;
+                    border-radius:10px;padding:14px;margin-bottom:20px;">
+            <div id="cancelDetail"
+                 style="font-size:13px;color:#555;line-height:2;"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="closeCancelModal()"
+                style="padding:10px 20px;border:1.5px solid #e0e0e0;
+                       border-radius:8px;background:#fff;font-size:14px;
+                       cursor:pointer;font-family:inherit;">
+                Không
+            </button>
+            <button onclick="confirmCancel()"
+                style="padding:10px 20px;border:none;border-radius:8px;
+                       background:#dc2626;color:#fff;font-size:14px;
+                       font-weight:600;cursor:pointer;font-family:inherit;"
+                id="btnConfirmCancel">
+                Huỷ đặt bàn
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Customer', 'Admin');
+document.getElementById('sidebarName').textContent = getFullName();
+
+let allReservations = [];
+let currentFilter   = 'all';
+let cancelId        = null;
+
+// ── Load danh sách đặt bàn ────────────────────────────────────
+async function loadReservations() {
+    try {
+        allReservations = await reservationApi.getMine();
+        renderList();
+    } catch(e) {
+        document.getElementById('resList').innerHTML = `
+            <div class="empty-reservations">
+                <div class="icon">⚠️</div>
+                <h3>Không tải được dữ liệu</h3>
+                <p>${e.message}</p>
+            </div>`;
+    }
+}
+
+// ── Filter ────────────────────────────────────────────────────
+function filterStatus(status, el) {
+    currentFilter = status;
+    document.querySelectorAll('.cat-tab')
+            .forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderList();
+}
+
+// ── Render danh sách ──────────────────────────────────────────
+function renderList() {
+    const list = document.getElementById('resList');
+
+    let filtered = allReservations;
+    if (currentFilter === 'pending')
+        filtered = allReservations.filter(r => !r.isConfirmed);
+    if (currentFilter === 'confirmed')
+        filtered = allReservations.filter(r => r.isConfirmed);
+
+    document.getElementById('resCount').textContent =
+        `${filtered.length} lượt đặt bàn`;
+
+    if (!filtered.length) {
+        list.innerHTML = `
+            <div class="empty-reservations">
+                <div class="icon">📅</div>
+                <h3>Chưa có đặt bàn nào</h3>
+                <p>Hãy đặt bàn trước để có trải nghiệm tốt nhất!</p>
+                <a href="booking.html" class="btn btn-primary"
+                   style="width:auto;display:inline-flex;">
+                    Đặt bàn ngay
+                </a>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = filtered
+        .sort((a, b) => new Date(b.reservedAt) - new Date(a.reservedAt))
+        .map(r => buildResCard(r))
+        .join('');
+}
+
+// ── Build card ────────────────────────────────────────────────
+function buildResCard(r) {
+    const dt  = new Date(r.reservedAt);
+    const day = dt.getDate();
+    const mon = dt.toLocaleString('vi-VN', { month: 'short' });
+    const time = dt.toLocaleTimeString('vi-VN', {
+        hour: '2-digit', minute: '2-digit'
+    });
+    const dateStr = dt.toLocaleDateString('vi-VN', {
+        weekday: 'long', day: '2-digit',
+        month: '2-digit', year: 'numeric'
+    });
+
+    const isPast = dt < new Date();
+
+    return `
+    <div class="reservation-card">
+        <div class="res-date-box">
+            <div class="res-date-day">${day}</div>
+            <div class="res-date-mon">${mon}</div>
+        </div>
+
+        <div class="res-info">
+            <div class="res-code">${r.bookingCode}</div>
+            <div class="res-name">${r.customerName}</div>
+            <div class="res-detail">
+                <span>📅 ${dateStr}</span>
+                <span>⏰ ${time}</span>
+                <span>👤 ${r.guestCount} người</span>
+                ${r.note ? `<span>📝 ${r.note}</span>` : ''}
+            </div>
+        </div>
+
+        <span class="res-status ${r.isConfirmed ? 'confirmed' : 'pending'}">
+            ${r.isConfirmed ? '✅ Đã xác nhận' : '⏳ Chờ xác nhận'}
+        </span>
+
+        ${!isPast && !r.isConfirmed
+            ? `<button class="res-cancel-btn"
+                       onclick="openCancelModal(${r.id}, '${r.bookingCode}', '${dateStr} ${time}', ${r.guestCount})">
+                   Huỷ
+               </button>`
+            : `<span style="font-size:11px;color:#ccc;min-width:40px;text-align:center;">
+                   ${isPast ? 'Đã qua' : ''}
+               </span>`
+        }
+    </div>`;
+}
+
+// ── Modal huỷ ─────────────────────────────────────────────────
+function openCancelModal(id, code, datetime, guests) {
+    cancelId = id;
+    document.getElementById('cancelDetail').innerHTML = `
+        <div>Mã đặt bàn: <strong>${code}</strong></div>
+        <div>Thời gian: <strong>${datetime}</strong></div>
+        <div>Số khách: <strong>${guests} người</strong></div>`;
+    document.getElementById('cancelModal').classList.add('open');
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelModal').classList.remove('open');
+    cancelId = null;
+}
+
+async function confirmCancel() {
+    if (!cancelId) return;
+    const btn     = document.getElementById('btnConfirmCancel');
+    btn.disabled  = true;
+    btn.textContent = 'Đang huỷ...';
+
+    try {
+        await reservationApi.cancel(cancelId);
+        showToast('Đã huỷ đặt bàn thành công', 'success');
+        closeCancelModal();
+        await loadReservations();
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+        btn.disabled    = false;
+        btn.textContent = 'Huỷ đặt bàn';
+    }
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+document.getElementById('cancelModal')
+        .addEventListener('click', function(e) {
+    if (e.target === this) closeCancelModal();
+});
+
+loadReservations();
+</script>
+</body>
+</html>
