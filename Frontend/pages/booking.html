@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt bàn — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Khách hàng</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="dashboard-customer.html">
+                <span class="nav-icon">🏠</span> Trang chủ
+            </a>
+            <a class="nav-item" href="menu-public.html">
+                <span class="nav-icon">🍜</span> Thực đơn
+            </a>
+            <a class="nav-item active" href="booking.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+            <a class="nav-item" href="my-reservations.html">
+                <span class="nav-icon">📋</span> Đặt bàn của tôi
+            </a>
+            <a class="nav-item" href="profile.html">
+                <span class="nav-icon">👤</span> Tài khoản
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role">Khách hàng</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-title">Đặt bàn</div>
+        <div class="page-sub">Đặt trước để có trải nghiệm tốt nhất</div>
+
+        <!-- Step indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1-indicator">
+                <div class="step-circle">1</div>
+                <div class="step-label">Thông tin</div>
+            </div>
+            <div class="step" id="step2-indicator">
+                <div class="step-circle">2</div>
+                <div class="step-label">Xác nhận</div>
+            </div>
+            <div class="step" id="step3-indicator">
+                <div class="step-circle">3</div>
+                <div class="step-label">Hoàn tất</div>
+            </div>
+        </div>
+
+        <!-- STEP 1: Form đặt bàn -->
+        <div id="stepForm">
+            <div class="booking-grid">
+
+                <!-- Form bên trái -->
+                <div class="booking-card">
+                    <h3>📋 Thông tin đặt bàn</h3>
+
+                    <div class="form-group">
+                        <label>Họ và tên *</label>
+                        <input type="text" id="b_name"
+                               placeholder="Nguyễn Văn A"
+                               value="">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số điện thoại *</label>
+                        <input type="tel" id="b_phone"
+                               placeholder="0901234567">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ngày đặt *</label>
+                        <input type="date" id="b_date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Giờ đến *</label>
+                        <select id="b_time"
+                            style="width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;outline:none;background:#fff;">
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số khách *</label>
+                        <div class="guest-picker">
+                            <button class="guest-btn"
+                                    onclick="changeGuest(-1)">−</button>
+                            <span class="guest-count" id="guestCount">2</span>
+                            <button class="guest-btn"
+                                    onclick="changeGuest(1)">+</button>
+                            <span style="font-size:13px;color:#888;">người</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ghi chú (tuỳ chọn)</label>
+                        <input type="text" id="b_note"
+                               placeholder="VD: Sinh nhật, cần ghế trẻ em...">
+                    </div>
+
+                </div>
+
+                <!-- Preview bên phải -->
+                <div>
+                    <div class="booking-card" style="margin-bottom:16px;">
+                        <h3>ℹ️ Thông tin nhà hàng</h3>
+                        <div style="font-size:13px;color:#555;line-height:2;">
+                            <div>⏰ Giờ mở cửa: <strong>10:00 — 22:00</strong></div>
+                            <div>📍 Địa chỉ: <strong>123 Đường ABC, Quận 1</strong></div>
+                            <div>📞 Hotline: <strong>0909 999 888</strong></div>
+                            <div>🪑 Sức chứa: <strong>~80 khách</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="booking-summary">
+                        <h4>📌 Tóm tắt đặt bàn</h4>
+                        <div class="summary-row">
+                            <span>Tên</span>
+                            <strong id="sum_name">—</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Điện thoại</span>
+                            <strong id="sum_phone">—</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Ngày</span>
+                            <strong id="sum_date">—</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Giờ</span>
+                            <strong id="sum_time">—</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Số khách</span>
+                            <strong id="sum_guest">2 người</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Ghi chú</span>
+                            <strong id="sum_note">—</strong>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary"
+                            style="margin-top:16px;"
+                            onclick="submitBooking()"
+                            id="btnBook">
+                        📅 Xác nhận đặt bàn
+                    </button>
+
+                    <div class="alert alert-error"
+                         id="bookingError"
+                         style="margin-top:12px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Thành công -->
+        <div id="stepSuccess" style="display:none;">
+            <div class="booking-card" style="max-width:480px;margin:0 auto;text-align:center;">
+                <div style="font-size:56px;margin-bottom:16px;">🎉</div>
+                <h3 style="border:none;text-align:center;color:#16a34a;">
+                    Đặt bàn thành công!
+                </h3>
+                <p style="font-size:14px;color:#666;margin-bottom:20px;">
+                    Chúng tôi sẽ liên hệ xác nhận qua số điện thoại của bạn.
+                </p>
+
+                <div class="booking-code-box">
+                    <div style="font-size:13px;color:#666;margin-bottom:8px;">
+                        Mã đặt bàn của bạn
+                    </div>
+                    <div class="booking-code" id="resultCode">—</div>
+                    <div style="font-size:12px;color:#888;margin-top:8px;">
+                        Vui lòng giữ mã này để check-in
+                    </div>
+                </div>
+
+                <div class="booking-summary" style="text-align:left;margin-top:20px;">
+                    <h4>Chi tiết đặt bàn</h4>
+                    <div class="summary-row">
+                        <span>Tên</span><strong id="res_name">—</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Ngày giờ</span><strong id="res_datetime">—</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Số khách</span><strong id="res_guest">—</strong>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button onclick="window.location.href='my-reservations.html'"
+                        class="btn btn-primary" style="flex:1;">
+                        Xem lịch đặt bàn
+                    </button>
+                    <button onclick="resetForm()"
+                        style="flex:1;padding:12px;border:1.5px solid #e0e0e0;border-radius:8px;background:#fff;font-size:14px;cursor:pointer;font-family:inherit;">
+                        Đặt bàn mới
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Customer', 'Admin', 'Staff');
+document.getElementById('sidebarName').textContent = getFullName();
+
+// ── Điền sẵn tên từ tài khoản ────────────────────────────────
+document.getElementById('b_name').value = getFullName();
+
+// ── Số khách ─────────────────────────────────────────────────
+let guestCount = 2;
+
+function changeGuest(delta) {
+    guestCount = Math.max(1, Math.min(20, guestCount + delta));
+    document.getElementById('guestCount').textContent = guestCount;
+    updateSummary();
+}
+
+// ── Set ngày tối thiểu = hôm nay ─────────────────────────────
+const today = new Date();
+const yyyy  = today.getFullYear();
+const mm    = String(today.getMonth() + 1).padStart(2, '0');
+const dd    = String(today.getDate()).padStart(2, '0');
+document.getElementById('b_date').min   = `${yyyy}-${mm}-${dd}`;
+document.getElementById('b_date').value = `${yyyy}-${mm}-${dd}`;
+
+// ── Tạo các khung giờ 10:00 → 21:30 ─────────────────────────
+function buildTimeOptions() {
+    const sel = document.getElementById('b_time');
+    for (let h = 10; h <= 21; h++) {
+        ['00', '30'].forEach(m => {
+            if (h === 21 && m === '30') return;
+            const val   = `${String(h).padStart(2,'0')}:${m}`;
+            const opt   = document.createElement('option');
+            opt.value   = val;
+            opt.textContent = val;
+            sel.appendChild(opt);
+        });
+    }
+    // Mặc định chọn giờ gần nhất
+    const nowH = today.getHours();
+    const nowM = today.getMinutes() >= 30 ? 30 : 0;
+    const def  = `${String(Math.min(nowH + 1, 21)).padStart(2,'0')}:00`;
+    sel.value  = def;
+}
+
+buildTimeOptions();
+
+// ── Live preview summary ──────────────────────────────────────
+function updateSummary() {
+    const name  = document.getElementById('b_name').value   || '—';
+    const phone = document.getElementById('b_phone').value  || '—';
+    const date  = document.getElementById('b_date').value;
+    const time  = document.getElementById('b_time').value   || '—';
+    const note  = document.getElementById('b_note').value   || '—';
+
+    document.getElementById('sum_name').textContent  = name;
+    document.getElementById('sum_phone').textContent = phone;
+    document.getElementById('sum_time').textContent  = time;
+    document.getElementById('sum_guest').textContent = `${guestCount} người`;
+    document.getElementById('sum_note').textContent  = note;
+
+    if (date) {
+        const d = new Date(date);
+        document.getElementById('sum_date').textContent =
+            d.toLocaleDateString('vi-VN', {
+                weekday:'long', day:'2-digit',
+                month:'2-digit', year:'numeric'
+            });
+    }
+}
+
+// Gắn event live preview
+['b_name','b_phone','b_date','b_time','b_note']
+    .forEach(id => {
+        document.getElementById(id)
+                .addEventListener('input', updateSummary);
+    });
+document.getElementById('b_time')
+        .addEventListener('change', updateSummary);
+
+updateSummary();
+
+// ── Validate ──────────────────────────────────────────────────
+function validate() {
+    const name  = document.getElementById('b_name').value.trim();
+    const phone = document.getElementById('b_phone').value.trim();
+    const date  = document.getElementById('b_date').value;
+    const time  = document.getElementById('b_time').value;
+    const err   = document.getElementById('bookingError');
+
+    err.style.display = 'none';
+
+    if (!name) {
+        showBookingError('Vui lòng nhập họ tên');
+        return false;
+    }
+    if (!phone || phone.length < 9) {
+        showBookingError('Vui lòng nhập số điện thoại hợp lệ');
+        return false;
+    }
+    if (!date) {
+        showBookingError('Vui lòng chọn ngày đặt bàn');
+        return false;
+    }
+    if (!time) {
+        showBookingError('Vui lòng chọn giờ đến');
+        return false;
+    }
+
+    // Kiểm tra không được đặt trong quá khứ
+    const selected = new Date(`${date}T${time}`);
+    if (selected < new Date()) {
+        showBookingError('Không thể đặt bàn trong quá khứ');
+        return false;
+    }
+
+    return true;
+}
+
+function showBookingError(msg) {
+    const err = document.getElementById('bookingError');
+    err.textContent   = msg;
+    err.style.display = 'block';
+}
+
+// ── Submit đặt bàn ────────────────────────────────────────────
+async function submitBooking() {
+    if (!validate()) return;
+
+    const btn = document.getElementById('btnBook');
+    btn.disabled    = true;
+    btn.textContent = 'Đang đặt bàn...';
+
+    const name  = document.getElementById('b_name').value.trim();
+    const phone = document.getElementById('b_phone').value.trim();
+    const date  = document.getElementById('b_date').value;
+    const time  = document.getElementById('b_time').value;
+    const note  = document.getElementById('b_note').value.trim();
+
+    const reservedAt = `${date}T${time}:00`;
+
+    try {
+        const result = await reservationApi.create({
+            customerName:  name,
+            customerPhone: phone,
+            guestCount:    guestCount,
+            reservedAt:    reservedAt,
+            note:          note || null,
+        });
+
+        showSuccess(result);
+
+    } catch(e) {
+        showBookingError(e.message);
+        btn.disabled    = false;
+        btn.textContent = '📅 Xác nhận đặt bàn';
+    }
+}
+
+// ── Hiện kết quả thành công ───────────────────────────────────
+function showSuccess(data) {
+    // Step indicator
+    document.getElementById('step1-indicator').classList.replace('active','done');
+    document.getElementById('step2-indicator').classList.replace('','done');
+    document.getElementById('step3-indicator').classList.add('active');
+
+    document.getElementById('resultCode').textContent  = data.bookingCode;
+    document.getElementById('res_name').textContent    = data.customerName;
+    document.getElementById('res_guest').textContent   = `${data.guestCount} người`;
+
+    const dt = new Date(data.reservedAt);
+    document.getElementById('res_datetime').textContent =
+        dt.toLocaleString('vi-VN', {
+            weekday:'long', day:'2-digit', month:'2-digit',
+            year:'numeric', hour:'2-digit', minute:'2-digit'
+        });
+
+    document.getElementById('stepForm').style.display    = 'none';
+    document.getElementById('stepSuccess').style.display = 'block';
+}
+
+// ── Reset form ────────────────────────────────────────────────
+function resetForm() {
+    document.getElementById('stepForm').style.display    = 'block';
+    document.getElementById('stepSuccess').style.display = 'none';
+    document.getElementById('step1-indicator').className = 'step active';
+    document.getElementById('step2-indicator').className = 'step';
+    document.getElementById('step3-indicator').className = 'step';
+
+    document.getElementById('b_name').value  = getFullName();
+    document.getElementById('b_phone').value = '';
+    document.getElementById('b_note').value  = '';
+    guestCount = 2;
+    document.getElementById('guestCount').textContent = '2';
+    document.getElementById('btnBook').disabled    = false;
+    document.getElementById('btnBook').textContent = '📅 Xác nhận đặt bàn';
+    document.getElementById('bookingError').style.display = 'none';
+    updateSummary();
+}
+</script>
+</body>
+</html>

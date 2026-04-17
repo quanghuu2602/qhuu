@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Màn hình Bếp — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Khu vực bếp</p>
+        </div>
+        <nav>
+            <a class="nav-item active" href="dashboard-kitchen.html">
+                <span class="nav-icon">👨‍🍳</span> Danh sách món
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName">...</div>
+                <div class="user-role">Bếp</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-title">Màn hình bếp</div>
+        <div class="page-sub">Danh sách món cần làm — cập nhật real-time</div>
+
+        <div style="background:#fff;border-radius:12px;padding:24px;border:1px solid #eee;text-align:center;color:#aaa;">
+            👨‍🍳 KOT real-time sẽ hiển thị ở đây (Ngày 17)
+        </div>
+    </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script>
+    requireRole('Kitchen', 'Admin');
+    document.getElementById('sidebarName').textContent = getFullName();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>RestaurantMS</title>
+</head>
+<body>
+<script src="js/auth.js"></script>
+<script>
+    // Vào trang gốc → kiểm tra đã login chưa
+    const token = getToken();
+    if (token) {
+        redirectByRole(getRole());
+    } else {
+        window.location.href = 'pages/login.html';
+    }
+</script>
+</body>
+</html>

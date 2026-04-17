@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Khách hàng — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Khách hàng</p>
+        </div>
+        <nav>
+            <a class="nav-item active" href="dashboard-customer.html">
+                <span class="nav-icon">🏠</span> Trang chủ
+            </a>
+            <a class="nav-item" href="menu-public.html">
+                <span class="nav-icon">🍜</span> Xem thực đơn
+            </a>
+            <a class="nav-item" href="booking.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+            <a class="nav-item" href="my-reservations.html">
+                <span class="nav-icon">📋</span> Đặt bàn của tôi
+            </a>
+            <a class="nav-item" href="profile.html">
+                <span class="nav-icon">👤</span> Tài khoản
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName">...</div>
+                <div class="user-role">Khách hàng</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-title">Xin chào, <span id="welcomeName"></span> 👋</div>
+        <div class="page-sub">Bạn muốn làm gì hôm nay?</div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+            <a href="menu-public.html" style="background:#fff;border-radius:12px;padding:28px 20px;border:1px solid #eee;text-align:center;text-decoration:none;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+                <div style="font-size:36px;margin-bottom:12px;">🍜</div>
+                <div style="font-size:15px;font-weight:700;color:#1a1a2e;">Xem thực đơn</div>
+                <div style="font-size:12px;color:#888;margin-top:4px;">Khám phá các món ăn</div>
+            </a>
+            <a href="booking.html" style="background:#fff;border-radius:12px;padding:28px 20px;border:1px solid #eee;text-align:center;text-decoration:none;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+                <div style="font-size:36px;margin-bottom:12px;">📅</div>
+                <div style="font-size:15px;font-weight:700;color:#1a1a2e;">Đặt bàn</div>
+                <div style="font-size:12px;color:#888;margin-top:4px;">Đặt bàn trước dễ dàng</div>
+            </a>
+            <a href="my-reservations.html" style="background:#fff;border-radius:12px;padding:28px 20px;border:1px solid #eee;text-align:center;text-decoration:none;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+                <div style="font-size:36px;margin-bottom:12px;">📋</div>
+                <div style="font-size:15px;font-weight:700;color:#1a1a2e;">Đặt bàn của tôi</div>
+                <div style="font-size:12px;color:#888;margin-top:4px;">Xem lịch sử đặt bàn</div>
+            </a>
+        </div>
+    </main>
+</div>
+
+<script src="../js/auth.js"></script>
+<script>
+    requireRole('Customer', 'Admin');
+    document.getElementById('welcomeName').textContent = getFullName();
+    document.getElementById('sidebarName').textContent = getFullName();
+</script>
+</body>
+</html>

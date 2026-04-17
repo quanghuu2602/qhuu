@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Menu — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Quản trị viên</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="dashboard-admin.html">
+                <span class="nav-icon">📊</span> Tổng quan
+            </a>
+            <a class="nav-item active" href="menu-management.html">
+                <span class="nav-icon">🍜</span> Quản lý Menu
+            </a>
+            <a class="nav-item" href="table-management.html">
+                <span class="nav-icon">🪑</span> Sơ đồ bàn
+            </a>
+            <a class="nav-item" href="reservations.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role">Quản trị viên</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+            <div>
+                <div class="page-title">Quản lý Thực đơn</div>
+                <div class="page-sub" id="totalCount">Đang tải...</div>
+            </div>
+            <button class="btn btn-primary"
+                    style="width:auto;gap:6px;"
+                    onclick="openAddModal()">
+                + Thêm món mới
+            </button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="menu-filter-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput"
+                       placeholder="Tìm kiếm món ăn..."
+                       oninput="onSearch(this.value)">
+            </div>
+            <select id="availFilter" onchange="loadMenu()"
+                style="padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:#fff;cursor:pointer;">
+                <option value="">Tất cả trạng thái</option>
+                <option value="true">Còn món</option>
+                <option value="false">Hết món</option>
+            </select>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="cat-tabs" id="catTabs"></div>
+
+        <!-- Menu grid -->
+        <div class="menu-grid" id="menuGrid">
+            <div class="empty-state">
+                <div class="empty-icon">⏳</div>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal thêm/sửa -->
+<div class="modal-overlay" id="menuModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title" id="modalTitle">Thêm món mới</span>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="form-group">
+            <label>Tên món *</label>
+            <input type="text" id="f_name" placeholder="VD: Bò bít tết Mỹ">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+                <label>Giá bán (VNĐ) *</label>
+                <input type="number" id="f_price" placeholder="250000">
+            </div>
+            <div class="form-group">
+                <label>Danh mục *</label>
+                <select id="f_category"
+                    style="width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;outline:none;background:#fff;">
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Mô tả</label>
+            <input type="text" id="f_desc"
+                   placeholder="Mô tả ngắn về món ăn...">
+        </div>
+
+        <div class="form-group">
+            <label>URL hình ảnh</label>
+            <input type="text" id="f_img"
+                   placeholder="https://... hoặc để trống dùng emoji">
+        </div>
+
+        <div class="form-group">
+            <label>Tags (cách nhau bằng dấu phẩy)</label>
+            <input type="text" id="f_tags"
+                   placeholder="Best Seller, Healthy, Must Try">
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:8px;justify-content:flex-end;">
+            <button onclick="closeModal()"
+                style="padding:11px 20px;border:1.5px solid #e0e0e0;border-radius:8px;background:#fff;font-size:14px;cursor:pointer;font-family:inherit;">
+                Huỷ
+            </button>
+            <button onclick="saveMenuItem()" class="btn btn-primary"
+                style="width:auto;" id="btnSave">
+                Lưu món
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Admin');
+document.getElementById('sidebarName').textContent = getFullName();
+
+let allItems    = [];
+let categories  = [];
+let activeCatId = null;
+let editingId   = null;
+let searchTimer = null;
+
+// ── Map emoji theo danh mục ──────────────────────────────────
+const catEmoji = {
+    'Khai vị':       '🥗',
+    'Món chính':     '🍖',
+    'Lẩu & Combo':   '🍲',
+    'Tráng miệng':   '🍮',
+    'Đồ uống':       '🥤',
+};
+
+const tagClass = {
+    'Best Seller': 'badge-bestseller',
+    'Healthy':     'badge-healthy',
+    'Special':     'badge-special',
+    'Must Try':    'badge-musttry',
+    'New':         'badge-new',
+};
+
+// ── Khởi động ────────────────────────────────────────────────
+async function init() {
+    await loadCategories();
+    await loadMenu();
+}
+
+// ── Load categories ──────────────────────────────────────────
+async function loadCategories() {
+    try {
+        categories = await menuApi.getCategories();
+        renderCatTabs();
+        renderCatOptions();
+    } catch (e) {
+        showToast('Lỗi tải danh mục: ' + e.message, 'error');
+    }
+}
+
+function renderCatTabs() {
+    const container = document.getElementById('catTabs');
+    let html = `<button class="cat-tab ${activeCatId === null ? 'active' : ''}"
+                        onclick="filterCat(null)">
+                    Tất cả
+                </button>`;
+    categories.forEach(c => {
+        const emoji = catEmoji[c.name] || '🍽';
+        html += `<button class="cat-tab ${activeCatId === c.id ? 'active' : ''}"
+                         onclick="filterCat(${c.id})">
+                     ${emoji} ${c.name}
+                 </button>`;
+    });
+    container.innerHTML = html;
+}
+
+function renderCatOptions() {
+    const sel = document.getElementById('f_category');
+    sel.innerHTML = categories
+        .map(c => `<option value="${c.id}">${c.name}</option>`)
+        .join('');
+}
+
+// ── Load menu ────────────────────────────────────────────────
+async function loadMenu() {
+    const search    = document.getElementById('searchInput').value.trim();
+    const availVal  = document.getElementById('availFilter').value;
+
+    try {
+        // Admin xem tất cả kể cả hết món
+        let url = '/menu';
+        const params = [];
+        if (activeCatId) params.push(`categoryId=${activeCatId}`);
+        if (search)      params.push(`search=${encodeURIComponent(search)}`);
+        if (availVal)    params.push(`isAvailable=${availVal}`);
+        if (params.length) url += '?' + params.join('&');
+
+        allItems = await callApi(url);
+        renderMenu();
+    } catch (e) {
+        showToast('Lỗi tải menu: ' + e.message, 'error');
+    }
+}
+
+function renderMenu() {
+    const grid = document.getElementById('menuGrid');
+    document.getElementById('totalCount').textContent =
+        `${allItems.length} món trong thực đơn`;
+
+    if (allItems.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🍽</div>
+                <p>Không tìm thấy món nào</p>
+                <span>Thử thay đổi bộ lọc hoặc thêm món mới</span>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = allItems.map(item => buildCard(item)).join('');
+}
+
+// ── Build card HTML ──────────────────────────────────────────
+function buildCard(item) {
+    const emoji   = catEmoji[item.categoryName] || '🍽';
+    const imgHtml = item.imageUrl
+        ? `<img class="card-img" src="${item.imageUrl}"
+               alt="${item.name}"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+    const placeholderStyle = item.imageUrl ? 'display:none' : '';
+
+    const badges = item.tags.map(t => {
+        const cls = tagClass[t] || 'badge-default';
+        return `<span class="badge-tag ${cls}">${t}</span>`;
+    }).join('');
+
+    const unavailableBadge = !item.isAvailable
+        ? `<span class="badge-unavailable">HẾT MÓN</span>` : '';
+
+    return `
+    <div class="menu-card ${!item.isAvailable ? 'unavailable' : ''}"
+         id="card-${item.id}">
+
+        ${imgHtml}
+        <div class="card-img-placeholder" style="${placeholderStyle}">
+            ${emoji}
+        </div>
+
+        <div class="card-badges">${badges}</div>
+        ${unavailableBadge}
+
+        <div class="card-body">
+            <div class="card-category">${item.categoryName}</div>
+            <div class="card-name">${item.name}</div>
+            ${item.description
+                ? `<div class="card-desc">${item.description}</div>`
+                : ''}
+            <div class="card-footer">
+                <div class="card-price">
+                    ${item.price.toLocaleString('vi-VN')}đ
+                </div>
+                <div class="card-actions">
+                    <button class="btn-icon btn-toggle"
+                            onclick="toggleItem(${item.id})"
+                            title="${item.isAvailable ? 'Đánh dấu hết món' : 'Bật lại còn món'}">
+                        ${item.isAvailable ? '✓' : '✗'}
+                    </button>
+                    <button class="btn-icon btn-edit"
+                            onclick="openEditModal(${item.id})"
+                            title="Sửa món">✏</button>
+                    <button class="btn-icon btn-delete"
+                            onclick="deleteItem(${item.id}, '${item.name.replace(/'/g,"\'")}')"
+                            title="Xoá món">🗑</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ── Filter ───────────────────────────────────────────────────
+function filterCat(catId) {
+    activeCatId = catId;
+    renderCatTabs();
+    loadMenu();
+}
+
+function onSearch(val) {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadMenu(), 400);
+}
+
+// ── Modal thêm ───────────────────────────────────────────────
+function openAddModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = 'Thêm món mới';
+    document.getElementById('btnSave').textContent    = 'Thêm món';
+    clearForm();
+    document.getElementById('menuModal').classList.add('open');
+}
+
+function openEditModal(id) {
+    const item = allItems.find(m => m.id === id);
+    if (!item) return;
+
+    editingId = id;
+    document.getElementById('modalTitle').textContent = 'Chỉnh sửa món';
+    document.getElementById('btnSave').textContent    = 'Lưu thay đổi';
+
+    document.getElementById('f_name').value     = item.name;
+    document.getElementById('f_price').value    = item.price;
+    document.getElementById('f_category').value = item.categoryId;
+    document.getElementById('f_desc').value     = item.description || '';
+    document.getElementById('f_img').value      = item.imageUrl || '';
+    document.getElementById('f_tags').value     = item.tags.join(', ');
+
+    document.getElementById('menuModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('menuModal').classList.remove('open');
+}
+
+function clearForm() {
+    ['f_name','f_price','f_desc','f_img','f_tags']
+        .forEach(id => document.getElementById(id).value = '');
+    if (categories.length)
+        document.getElementById('f_category').value = categories[0].id;
+}
+
+// ── Save (Thêm hoặc Sửa) ─────────────────────────────────────
+async function saveMenuItem() {
+    const name     = document.getElementById('f_name').value.trim();
+    const price    = parseFloat(document.getElementById('f_price').value);
+    const catId    = parseInt(document.getElementById('f_category').value);
+    const desc     = document.getElementById('f_desc').value.trim();
+    const imgUrl   = document.getElementById('f_img').value.trim();
+    const tagsRaw  = document.getElementById('f_tags').value.trim();
+    const tags     = tagsRaw ? tagsRaw.split(',').map(t => t.trim()) : [];
+
+    if (!name)         return showToast('Vui lòng nhập tên món', 'error');
+    if (isNaN(price) || price < 0)
+                       return showToast('Giá không hợp lệ', 'error');
+
+    const btnSave  = document.getElementById('btnSave');
+    btnSave.disabled = true;
+    btnSave.textContent = 'Đang lưu...';
+
+    try {
+        if (editingId) {
+            // Cập nhật
+            const existing = allItems.find(m => m.id === editingId);
+            await menuApi.update(editingId, {
+                name, price, imageUrl: imgUrl || null,
+                description: desc || null,
+                categoryId: catId,
+                isAvailable: existing?.isAvailable ?? true,
+                tags
+            });
+            showToast('Đã cập nhật món thành công!', 'success');
+        } else {
+            // Thêm mới
+            await menuApi.create({
+                name, price,
+                imageUrl: imgUrl || null,
+                description: desc || null,
+                categoryId: catId,
+                tags
+            });
+            showToast('Đã thêm món mới!', 'success');
+        }
+
+        closeModal();
+        loadMenu();
+    } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = editingId ? 'Lưu thay đổi' : 'Thêm món';
+    }
+}
+
+// ── Toggle còn/hết món ───────────────────────────────────────
+async function toggleItem(id) {
+    try {
+        await menuApi.toggle(id);
+        const item = allItems.find(m => m.id === id);
+        const msg  = item?.isAvailable ? 'Đã đánh dấu hết món' : 'Đã bật lại còn món';
+        showToast(msg, 'success');
+        loadMenu();
+    } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// ── Xoá món ─────────────────────────────────────────────────
+async function deleteItem(id, name) {
+    if (!confirm(`Xác nhận xoá món "${name}"?\nHành động này không thể hoàn tác!`))
+        return;
+    try {
+        await menuApi.delete(id);
+        showToast(`Đã xoá "${name}"`, 'success');
+        loadMenu();
+    } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// ── Toast ────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent  = msg;
+    t.className    = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Đóng modal khi click ngoài
+document.getElementById('menuModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>

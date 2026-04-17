@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thực đơn — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Khách hàng</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="dashboard-customer.html">
+                <span class="nav-icon">🏠</span> Trang chủ
+            </a>
+            <a class="nav-item active" href="menu-public.html">
+                <span class="nav-icon">🍜</span> Thực đơn
+            </a>
+            <a class="nav-item" href="booking.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+            <a class="nav-item" href="my-reservations.html">
+                <span class="nav-icon">📋</span> Đặt bàn của tôi
+            </a>
+            <a class="nav-item" href="profile.html">
+                <span class="nav-icon">👤</span> Tài khoản
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role">Khách hàng</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-title">Thực đơn hôm nay</div>
+        <div class="page-sub" id="menuCount">Đang tải...</div>
+
+        <!-- Search -->
+        <div class="menu-filter-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput"
+                       placeholder="Tìm kiếm món ăn..."
+                       oninput="onSearch()">
+            </div>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="cat-tabs" id="catTabs"></div>
+
+        <!-- Grid -->
+        <div class="menu-grid" id="menuGrid">
+            <div class="empty-state">
+                <div class="empty-icon">⏳</div>
+                <p>Đang tải thực đơn...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Customer', 'Admin', 'Staff');
+document.getElementById('sidebarName').textContent = getFullName();
+
+// ── Config ────────────────────────────────────────────────────
+const catEmoji = {
+    'Khai vị':     '🥗',
+    'Món chính':   '🍖',
+    'Lẩu & Combo': '🍲',
+    'Tráng miệng': '🍮',
+    'Đồ uống':     '🥤',
+};
+
+const tagClass = {
+    'Best Seller': 'badge-bestseller',
+    'Healthy':     'badge-healthy',
+    'Special':     'badge-special',
+    'Must Try':    'badge-musttry',
+    'New':         'badge-new',
+};
+
+let activeCatId = null;
+let searchTimer = null;
+let categories  = [];
+
+// ── Khởi động ────────────────────────────────────────────────
+async function init() {
+    try {
+        categories = await menuApi.getCategories();
+        renderCatTabs();
+        await loadMenu();
+    } catch(e) {
+        document.getElementById('menuGrid').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">⚠️</div>
+                <p>Không kết nối được server</p>
+                <span>Vui lòng thử lại sau</span>
+            </div>`;
+    }
+}
+
+// ── Render tabs ───────────────────────────────────────────────
+function renderCatTabs() {
+    const container = document.getElementById('catTabs');
+    let html = `<button class="cat-tab active"
+                        onclick="filterCat(null, this)">
+                    🍽 Tất cả
+                </button>`;
+    categories.forEach(c => {
+        const emoji = catEmoji[c.name] || '🍽';
+        html += `<button class="cat-tab"
+                         onclick="filterCat(${c.id}, this)">
+                     ${emoji} ${c.name}
+                     <span style="
+                         background:rgba(255,255,255,0.25);
+                         border-radius:50px;
+                         padding:0 6px;
+                         font-size:10px;
+                         margin-left:4px;">
+                         ${c.totalItems}
+                     </span>
+                 </button>`;
+    });
+    container.innerHTML = html;
+}
+
+// ── Filter theo category ──────────────────────────────────────
+function filterCat(catId, el) {
+    activeCatId = catId;
+    document.querySelectorAll('.cat-tab')
+            .forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    loadMenu();
+}
+
+// ── Tìm kiếm debounce ────────────────────────────────────────
+function onSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(loadMenu, 400);
+}
+
+// ── Load menu từ API ─────────────────────────────────────────
+async function loadMenu() {
+    const search = document.getElementById('searchInput').value.trim();
+    try {
+        const items = await menuApi.getAll(activeCatId, search || null);
+        document.getElementById('menuCount').textContent =
+            `${items.length} món đang phục vụ`;
+        renderMenu(items);
+    } catch(e) {
+        document.getElementById('menuGrid').innerHTML =
+            `<div class="empty-state">
+                <div class="empty-icon">❌</div>
+                <p>Lỗi tải dữ liệu</p>
+                <span>${e.message}</span>
+             </div>`;
+    }
+}
+
+// ── Render danh sách món ──────────────────────────────────────
+function renderMenu(items) {
+    const grid = document.getElementById('menuGrid');
+
+    if (!items.length) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🍽</div>
+                <p>Không tìm thấy món nào</p>
+                <span>Thử tìm kiếm với từ khoá khác</span>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = items.map(item => {
+        const emoji   = catEmoji[item.categoryName] || '🍽';
+        const imgHtml = item.imageUrl
+            ? `<img class="card-img" src="${item.imageUrl}"
+                    alt="${item.name}"
+                    onerror="this.style.display='none';
+                             this.nextElementSibling.style.display='flex'">`
+            : '';
+        const phStyle = item.imageUrl ? 'display:none' : '';
+        const badges  = item.tags.map(t =>
+            `<span class="badge-tag ${tagClass[t] || 'badge-default'}">${t}</span>`
+        ).join('');
+
+        return `
+        <div class="menu-card">
+            ${imgHtml}
+            <div class="card-img-placeholder" style="${phStyle}">${emoji}</div>
+            <div class="card-badges">${badges}</div>
+
+            <div class="card-body">
+                <div class="card-category">${item.categoryName}</div>
+                <div class="card-name">${item.name}</div>
+                ${item.description
+                    ? `<div class="card-desc">${item.description}</div>`
+                    : ''}
+                <div class="card-footer">
+                    <div class="card-price">
+                        ${item.price.toLocaleString('vi-VN')}đ
+                    </div>
+                    <button style="
+                        padding: 7px 14px;
+                        background: #4f46e5;
+                        color: #fff;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-family: inherit;"
+                        onclick="goBooking()">
+                        Đặt bàn
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function goBooking() {
+    window.location.href = 'booking.html';
+}
+
+init();
+</script>
+</body>
+</html>

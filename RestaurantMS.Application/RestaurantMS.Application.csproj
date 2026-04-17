@@ -14,9 +14,4 @@
     <ProjectReference Include="..\RestaurantMS.Domain\RestaurantMS.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
-    <Folder Include="DTOS\" />
-  </ItemGroup>
-
 </Project>

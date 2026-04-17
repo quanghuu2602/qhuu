@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+
+        <div class="auth-logo">
+            <h1>🍽 RestaurantMS</h1>
+            <p>Hệ thống quản lý nhà hàng</p>
+        </div>
+
+        <!-- Thông báo lỗi -->
+        <div class="alert alert-error" id="alertError"></div>
+
+        <form id="loginForm">
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email"
+                       placeholder="admin@restaurant.com" required>
+                <div class="error-msg" id="emailError">Email không hợp lệ</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password"
+                       placeholder="••••••••" required>
+                <div class="error-msg" id="passwordError">
+                    Mật khẩu tối thiểu 6 ký tự và có chữ cái
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btnLogin">
+                Đăng nhập
+            </button>
+
+        </form>
+
+        <div class="auth-link">
+            Chưa có tài khoản?
+            <a href="register.html">Đăng ký ngay</a>
+        </div>
+
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+    // Nếu đã đăng nhập rồi thì redirect luôn
+    if (getToken()) {
+        redirectByRole(getRole());
+    }
+
+    const form     = document.getElementById('loginForm');
+    const btnLogin = document.getElementById('btnLogin');
+    const alertErr = document.getElementById('alertError');
+
+    // ── Validate ───────────────────────────────────────────────
+    function validate() {
+        let ok = true;
+        const email    = document.getElementById('email');
+        const password = document.getElementById('password');
+        const emailErr = document.getElementById('emailError');
+        const passErr  = document.getElementById('passwordError');
+
+        // Reset
+        email.classList.remove('error');
+        password.classList.remove('error');
+        emailErr.style.display = 'none';
+        passErr.style.display  = 'none';
+
+        if (!email.value.includes('@')) {
+            email.classList.add('error');
+            emailErr.style.display = 'block';
+            ok = false;
+        }
+
+        if (password.value.length < 6) {
+            password.classList.add('error');
+            passErr.style.display = 'block';
+            ok = false;
+        }
+
+        return ok;
+    }
+
+    // ── Submit ─────────────────────────────────────────────────
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertErr.style.display = 'none';
+
+        if (!validate()) return;
+
+        // Hiện loading
+        btnLogin.disabled = true;
+        btnLogin.innerHTML =
+            '<div class="spinner"></div> Đang đăng nhập...';
+
+        try {
+            const data = await authApi.login(
+                document.getElementById('email').value.trim(),
+                document.getElementById('password').value
+            );
+
+            // Lưu token + thông tin
+            saveAuth(data);
+
+            // Redirect theo role
+            redirectByRole(data.role);
+
+        } catch (err) {
+            alertErr.textContent    = err.message;
+            alertErr.style.display  = 'block';
+            btnLogin.disabled       = false;
+            btnLogin.innerHTML      = 'Đăng nhập';
+        }
+    });
+</script>
+</body>
+</html>
