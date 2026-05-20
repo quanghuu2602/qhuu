@@ -10,17 +10,17 @@ using RestaurantMS.Domain.Entities;
 using RestaurantMS.Infrastructure.Data;
 using RestaurantMS.Infrastructure.Repositories;
 using RestaurantMS.Infrastructure.Services;
+using RestaurantMS.API.Hubs;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Controllers & Swagger ─────────────────────────────────────
+// ── 1. Controllers & Swagger ─────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "RestaurantMS API", Version = "v1" });
-
-    // Cho phép nhập JWT token ngay trong Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -35,23 +35,18 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id   = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
     });
 });
 
-// ── Database ──────────────────────────────────────────────────
+// ── 2. Database ──────────────────────────────────────────────────
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
-    opt.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ── Identity ──────────────────────────────────────────────────
+// ── 3. Identity ──────────────────────────────────────────────────
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opt =>
 {
     opt.Password.RequireDigit = false;
@@ -62,11 +57,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(opt =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// ── JWT ───────────────────────────────────────────────────────
+// ── 4. JWT & SignalR Auth ─────────────────────────────────────────
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSection);
-
 var jwtKey = jwtSection["SecretKey"]!;
+
 builder.Services.AddAuthentication(opt =>
 {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -82,33 +77,51 @@ builder.Services.AddAuthentication(opt =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSection["Issuer"],
         ValidAudience = jwtSection["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-                                       Encoding.UTF8.GetBytes(jwtKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        // Quan trọng: Giúp SignalR hiểu Claim Role
+        RoleClaimType = ClaimTypes.Role
+    };
+
+    opt.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            // Hứng token từ Query String cho WebSockets
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
-// ── CORS ──────────────────────────────────────────────────────
+// ── 5. CORS (Cực kỳ quan trọng cho SignalR) ──────────────────────
 builder.Services.AddCors(opt =>
     opt.AddPolicy("FrontendPolicy", policy =>
-        policy.WithOrigins(
-                "http://127.0.0.1:5500",
-                "http://localhost:5500")
+        policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials()));
+              .AllowCredentials())); // Bắt buộc phải có để gửi token
 
-// ── Đăng ký Services ─────────────────────────────────────────
+// ── 6. Đăng ký Services ─────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMenuRepository, MenuRepository>();
 builder.Services.AddScoped<ITableRepository, TableRepository>();
 builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<PdfService>();
+
 var app = builder.Build();
 
-// ── Seed Roles ngay khi app khởi động ────────────────────────
+// ── 7. Seed Roles ────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider
-                           .GetRequiredService<RoleManager<IdentityRole>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     foreach (var role in new[] { "Admin", "Staff", "Kitchen", "Customer" })
     {
         if (!await roleManager.RoleExistsAsync(role))
@@ -116,15 +129,22 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// ── 8. Middleware Pipeline (Thứ tự rất quan trọng) ───────────────
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
+
+// UseCors PHẢI đặt trước Authentication/Authorization
 app.UseCors("FrontendPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
 app.MapControllers();
+app.MapHub<KitchenHub>("/hubs/kitchen");
 
 app.Run();

@@ -22,9 +22,10 @@ public interface ITableRepository
 public interface IReservationRepository
 {
     Task<Reservation> CreateAsync(Reservation reservation);
-    Task<IEnumerable<Reservation>> GetByPhoneAsync(string phone);
-    Task<IEnumerable<Reservation>> GetAllAsync(DateTime? date = null);
+    Task<IEnumerable<Reservation>> GetAllAsync(DateTime? date = null,
+                                               bool? isConfirmed = null);
     Task<Reservation?> GetByCodeAsync(string code);
+    Task<IEnumerable<Reservation>> GetMineAsync(string phone);
+    Task ConfirmAsync(int id, int? tableId);
     Task CancelAsync(int id);
-    Task ConfirmAsync(int id);
 }

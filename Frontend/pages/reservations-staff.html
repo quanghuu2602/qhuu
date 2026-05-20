@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý đặt bàn — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/reservations-staff.css">
+</head>
+<body>
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p id="roleLabel">Nhân viên</p>
+        </div>
+        <nav id="sidebarNav"></nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role" id="sidebarRole"></div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-title">Quản lý đặt bàn</div>
+        <div class="page-sub" id="pageSubTitle">Hôm nay</div>
+
+        <!-- Check-in bằng mã booking -->
+        <div class="checkin-panel">
+            <span style="font-size:13px;font-weight:600;
+                         color:#555;white-space:nowrap;">
+                🔍 Check-in khách:
+            </span>
+            <input type="text" id="codeInput"
+                   placeholder="Nhập mã booking..."
+                   maxlength="6"
+                   oninput="this.value=this.value.toUpperCase()"
+                   onkeydown="if(event.key==='Enter') searchByCode()">
+            <button onclick="searchByCode()" class="confirm-btn"
+                    style="padding:11px 20px;font-size:13px;">
+                Tìm kiếm
+            </button>
+            <div class="checkin-result" id="checkinResult"></div>
+        </div>
+
+        <!-- Toolbar filter -->
+        <div class="res-toolbar">
+            <!-- Chọn ngày -->
+            <div class="date-picker-wrap">
+                <span>📅</span>
+                <input type="date" id="dateFilter"
+                       onchange="loadReservations()">
+            </div>
+
+            <!-- Filter trạng thái -->
+            <div class="res-filter-tabs">
+                <button class="res-filter-tab active"
+                        onclick="setFilter(null, this)">
+                    Tất cả
+                </button>
+                <button class="res-filter-tab"
+                        onclick="setFilter(false, this)">
+                    ⏳ Chờ xác nhận
+                </button>
+                <button class="res-filter-tab"
+                        onclick="setFilter(true, this)">
+                    ✅ Đã xác nhận
+                </button>
+            </div>
+
+            <button onclick="loadReservations()"
+                style="padding:9px 16px;border-radius:10px;
+                       border:1.5px solid #e0e0e0;background:#fff;
+                       font-size:13px;cursor:pointer;font-family:inherit;
+                       font-weight:600;color:#555;margin-left:auto;">
+                🔄 Làm mới
+            </button>
+        </div>
+
+        <!-- Stats nhanh -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);
+                    gap:12px;margin-bottom:20px;">
+            <div style="background:#fff;border-radius:12px;padding:14px 18px;
+                        border:1px solid #f0f0f0;text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#4f46e5;"
+                     id="statAll">0</div>
+                <div style="font-size:11px;color:#999;font-weight:600;
+                            text-transform:uppercase;letter-spacing:0.4px;">
+                    Tổng đặt bàn
+                </div>
+            </div>
+            <div style="background:#fff;border-radius:12px;padding:14px 18px;
+                        border:1px solid #f0f0f0;text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#f59e0b;"
+                     id="statPending">0</div>
+                <div style="font-size:11px;color:#999;font-weight:600;
+                            text-transform:uppercase;letter-spacing:0.4px;">
+                    Chờ xác nhận
+                </div>
+            </div>
+            <div style="background:#fff;border-radius:12px;padding:14px 18px;
+                        border:1px solid #f0f0f0;text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#16a34a;"
+                     id="statConfirmed">0</div>
+                <div style="font-size:11px;color:#999;font-weight:600;
+                            text-transform:uppercase;letter-spacing:0.4px;">
+                    Đã xác nhận
+                </div>
+            </div>
+        </div>
+
+        <!-- Table danh sách -->
+        <div style="overflow-x:auto;">
+            <table class="res-table" id="resTable">
+                <thead>
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Mã booking</th>
+                        <th>Thời gian</th>
+                        <th>Số khách</th>
+                        <th>Bàn</th>
+                        <th>Ghi chú</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="resBody">
+                    <tr>
+                        <td colspan="8"
+                            style="text-align:center;padding:40px;
+                                   color:#ccc;">
+                            ⏳ Đang tải...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<!-- Modal xác nhận + chọn bàn -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width:460px;">
+        <div class="modal-header">
+            <span class="modal-title">✅ Xác nhận đặt bàn</span>
+            <button class="modal-close"
+                    onclick="closeConfirmModal()">×</button>
+        </div>
+
+        <!-- Thông tin đặt bàn -->
+        <div style="background:#f8f8ff;border-radius:10px;
+                    padding:14px 16px;margin-bottom:18px;
+                    border:1.5px solid #e0e7ff;">
+            <div id="confirmInfo"
+                 style="font-size:13px;color:#555;line-height:2.2;">
+            </div>
+        </div>
+
+        <!-- Chọn bàn -->
+        <div class="form-group">
+            <label>Gán bàn cho khách (tuỳ chọn)</label>
+            <select id="tableSelect"
+                style="width:100%;padding:11px 14px;
+                       border:1.5px solid #e0e0e0;border-radius:8px;
+                       font-size:14px;font-family:inherit;
+                       outline:none;background:#fff;">
+                <option value="">-- Chưa gán bàn cụ thể --</option>
+            </select>
+        </div>
+
+        <div class="alert alert-error" id="confirmError"></div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;
+                    margin-top:8px;">
+            <button onclick="closeConfirmModal()"
+                style="padding:11px 20px;border:1.5px solid #e0e0e0;
+                       border-radius:8px;background:#fff;font-size:14px;
+                       cursor:pointer;font-family:inherit;color:#666;">
+                Huỷ
+            </button>
+            <button onclick="doConfirm()"
+                class="btn btn-primary" style="width:auto;"
+                id="btnDoConfirm">
+                ✅ Xác nhận
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Admin', 'Staff');
+
+const role = getRole();
+document.getElementById('sidebarName').textContent = getFullName();
+document.getElementById('sidebarRole').textContent =
+    role === 'Admin' ? 'Quản trị viên' : 'Nhân viên';
+document.getElementById('roleLabel').textContent =
+    role === 'Admin' ? 'Quản trị viên' : 'Nhân viên';
+
+// ── Render sidebar theo role ──────────────────────────────────
+document.getElementById('sidebarNav').innerHTML = role === 'Admin' ? `
+    <a class="nav-item" href="dashboard-admin.html">
+        <span class="nav-icon">📊</span> Tổng quan
+    </a>
+    <a class="nav-item" href="menu-management.html">
+        <span class="nav-icon">🍜</span> Quản lý Menu
+    </a>
+    <a class="nav-item" href="table-map.html">
+        <span class="nav-icon">🪑</span> Sơ đồ bàn
+    </a>
+    <a class="nav-item active" href="reservations-staff.html">
+        <span class="nav-icon">📅</span> Đặt bàn
+    </a>
+    <a class="nav-item" href="reports.html">
+        <span class="nav-icon">📈</span> Báo cáo
+    </a>
+    <a class="nav-item" href="profile.html">
+        <span class="nav-icon">👤</span> Tài khoản
+    </a>` : `
+    <a class="nav-item" href="table-map.html">
+        <span class="nav-icon">🪑</span> Sơ đồ bàn
+    </a>
+    <a class="nav-item" href="order-new.html">
+        <span class="nav-icon">📋</span> Gọi món
+    </a>
+    <a class="nav-item active" href="reservations-staff.html">
+        <span class="nav-icon">📅</span> Đặt bàn
+    </a>
+    <a class="nav-item" href="checkout.html">
+        <span class="nav-icon">💳</span> Thanh toán
+    </a>
+    <a class="nav-item" href="profile.html">
+        <span class="nav-icon">👤</span> Tài khoản
+    </a>`;
+
+// ── State ─────────────────────────────────────────────────────
+let allRes       = [];
+let filterStatus = null;   // null | true | false
+let confirmId    = null;
+let availTables  = [];
+
+// ── Set ngày mặc định = hôm nay ──────────────────────────────
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('dateFilter').value = today;
+
+// ── Khởi động ─────────────────────────────────────────────────
+async function init() {
+    await Promise.all([loadReservations(), loadAvailTables()]);
+}
+
+// ── Load bàn trống để chọn khi xác nhận ──────────────────────
+async function loadAvailTables() {
+    try {
+        availTables = await tableApi.getAvailable();
+    } catch(e) {
+        availTables = [];
+    }
+}
+
+// ── Load danh sách đặt bàn ────────────────────────────────────
+async function loadReservations() {
+    const date = document.getElementById('dateFilter').value;
+    document.getElementById('pageSubTitle').textContent =
+        new Date(date + 'T00:00').toLocaleDateString('vi-VN', {
+            weekday:'long', day:'2-digit',
+            month:'2-digit', year:'numeric'
+        });
+    try {
+        allRes = await reservationApi.getAll(date, null);
+        updateStats();
+        renderTable();
+    } catch(e) {
+        showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
+    }
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function updateStats() {
+    document.getElementById('statAll').textContent =
+        allRes.length;
+    document.getElementById('statPending').textContent =
+        allRes.filter(r => !r.isConfirmed).length;
+    document.getElementById('statConfirmed').textContent =
+        allRes.filter(r => r.isConfirmed).length;
+}
+
+// ── Filter ────────────────────────────────────────────────────
+function setFilter(status, el) {
+    filterStatus = status;
+    document.querySelectorAll('.res-filter-tab')
+            .forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderTable();
+}
+
+// ── Render bảng ───────────────────────────────────────────────
+function renderTable() {
+    const body = document.getElementById('resBody');
+
+    let list = allRes;
+    if (filterStatus === true)
+        list = allRes.filter(r => r.isConfirmed);
+    if (filterStatus === false)
+        list = allRes.filter(r => !r.isConfirmed);
+
+    if (!list.length) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="8"
+                    style="text-align:center;padding:48px;color:#ccc;">
+                    <div style="font-size:40px;margin-bottom:12px;">📅</div>
+                    <div style="font-size:14px;">
+                        Không có đặt bàn nào
+                    </div>
+                </td>
+            </tr>`;
+        return;
+    }
+
+    body.innerHTML = list.map(r => {
+        const dt   = new Date(r.reservedAt);
+        const time = dt.toLocaleTimeString('vi-VN', {
+            hour:'2-digit', minute:'2-digit'
+        });
+        const dateStr = dt.toLocaleDateString('vi-VN', {
+            day:'2-digit', month:'2-digit'
+        });
+        const isPast = dt < new Date();
+
+        return `
+        <tr>
+            <td>
+                <div class="res-name">${r.customerName}</div>
+                <div class="res-phone">📞 ${r.customerPhone}</div>
+            </td>
+            <td>
+                <span class="res-code-small">${r.bookingCode}</span>
+            </td>
+            <td>
+                <div class="res-time">${time}</div>
+                <div class="res-date-small">${dateStr}</div>
+            </td>
+            <td>
+                <div class="res-guests">
+                    👤 ${r.guestCount}
+                </div>
+            </td>
+            <td>
+                ${r.tableName
+                    ? `<span style="font-size:12px;font-weight:600;
+                                    color:#16a34a;background:#f0fdf4;
+                                    padding:3px 9px;border-radius:6px;">
+                           🪑 ${r.tableName}
+                       </span>`
+                    : `<span style="font-size:11px;color:#bbb;">
+                           Chưa gán
+                       </span>`}
+            </td>
+            <td style="max-width:140px;">
+                <span style="font-size:12px;color:#888;">
+                    ${r.note || '—'}
+                </span>
+            </td>
+            <td>
+                <span class="res-status
+                    ${r.isConfirmed ? 'confirmed' : 'pending'}">
+                    ${r.isConfirmed ? '✅ Đã xác nhận' : '⏳ Chờ xác nhận'}
+                </span>
+            </td>
+            <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    ${!r.isConfirmed ? `
+                    <button class="confirm-btn"
+                            onclick="openConfirmModal(
+                                ${r.id},
+                                '${r.customerName.replace(/'/g,"\\'")}',
+                                '${r.customerPhone}',
+                                ${r.guestCount},
+                                '${time} ${dateStr}',
+                                '${r.note?.replace(/'/g,"\\'")||''}'
+                            )">
+                        ✅ Xác nhận
+                    </button>` : ''}
+                    ${!isPast ? `
+                    <button class="cancel-btn-sm"
+                            onclick="cancelRes(${r.id},
+                                     '${r.customerName.replace(/'/g,"\\'")}')">
+                        Huỷ
+                    </button>` : ''}
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+// ── Mở modal xác nhận ─────────────────────────────────────────
+function openConfirmModal(id, name, phone, guests, datetime, note) {
+    confirmId = id;
+
+    document.getElementById('confirmInfo').innerHTML = `
+        <div>👤 Khách: <strong>${name}</strong></div>
+        <div>📞 SĐT: <strong>${phone}</strong></div>
+        <div>⏰ Thời gian: <strong>${datetime}</strong></div>
+        <div>👥 Số khách: <strong>${guests} người</strong></div>
+        ${note ? `<div>📝 Ghi chú: <strong>${note}</strong></div>` : ''}`;
+
+    // Render danh sách bàn trống
+    const sel = document.getElementById('tableSelect');
+    sel.innerHTML = `<option value="">-- Chưa gán bàn cụ thể --</option>`;
+
+    // Filter bàn đủ chỗ
+    const suitable = availTables.filter(t => t.capacity >= guests);
+    suitable.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value       = t.id;
+        opt.textContent = `${t.name} (${t.areaName} · ${t.capacity} chỗ)`;
+        sel.appendChild(opt);
+    });
+
+    if (!suitable.length) {
+        const opt = document.createElement('option');
+        opt.disabled     = true;
+        opt.textContent  = '⚠️ Không có bàn trống đủ chỗ';
+        sel.appendChild(opt);
+    }
+
+    document.getElementById('confirmError').style.display = 'none';
+    document.getElementById('confirmModal').classList.add('open');
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('open');
+    confirmId = null;
+}
+
+// ── Thực hiện xác nhận ────────────────────────────────────────
+async function doConfirm() {
+    if (!confirmId) return;
+
+    const tableId  = document.getElementById('tableSelect').value;
+    const btn      = document.getElementById('btnDoConfirm');
+    btn.disabled   = true;
+    btn.textContent = 'Đang xác nhận...';
+
+    try {
+        await reservationApi.confirm(
+            confirmId,
+            tableId ? parseInt(tableId) : null
+        );
+
+        showToast('Đã xác nhận đặt bàn thành công! ✅', 'success');
+        closeConfirmModal();
+        await Promise.all([loadReservations(), loadAvailTables()]);
+    } catch(e) {
+        document.getElementById('confirmError').textContent = e.message;
+        document.getElementById('confirmError').style.display = 'block';
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = '✅ Xác nhận';
+    }
+}
+
+// ── Huỷ đặt bàn ──────────────────────────────────────────────
+async function cancelRes(id, name) {
+    if (!confirm(`Xác nhận huỷ đặt bàn của "${name}"?`)) return;
+    try {
+        await reservationApi.cancel(id);
+        showToast(`Đã huỷ đặt bàn của ${name}`, 'success');
+        await loadReservations();
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// ── Check-in bằng mã booking ──────────────────────────────────
+async function searchByCode() {
+    const code   = document.getElementById('codeInput').value.trim();
+    const result = document.getElementById('checkinResult');
+
+    if (!code || code.length < 4) {
+        result.className    = 'checkin-result not-found';
+        result.textContent  = 'Vui lòng nhập mã booking (6 ký tự)';
+        result.style.display = 'block';
+        return;
+    }
+
+    try {
+        const r = await reservationApi.getByCode(code);
+        const dt = new Date(r.reservedAt);
+
+        result.className = 'checkin-result found';
+        result.style.display = 'block';
+        result.innerHTML = `
+            <div style="display:flex;justify-content:space-between;
+                        align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <div style="font-size:15px;font-weight:700;
+                                color:#1a1a2e;margin-bottom:6px;">
+                        ✅ Tìm thấy — ${r.customerName}
+                    </div>
+                    <div style="font-size:12px;line-height:2;color:#555;">
+                        📞 ${r.customerPhone} &nbsp;·&nbsp;
+                        👥 ${r.guestCount} người &nbsp;·&nbsp;
+                        ⏰ ${dt.toLocaleTimeString('vi-VN',{
+                            hour:'2-digit',minute:'2-digit'})}
+                        ${dt.toLocaleDateString('vi-VN')}
+                    </div>
+                    <div style="margin-top:4px;">
+                        ${r.isConfirmed
+                            ? `<span style="color:#16a34a;
+                                           font-weight:600;font-size:12px;">
+                                   ✅ Đã xác nhận
+                                   ${r.tableName
+                                       ? '— Bàn: ' + r.tableName
+                                       : ''}
+                               </span>`
+                            : `<span style="color:#f59e0b;
+                                           font-weight:600;font-size:12px;">
+                                   ⏳ Chưa xác nhận
+                               </span>`}
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    ${!r.isConfirmed ? `
+                    <button class="confirm-btn"
+                            onclick="openConfirmModal(
+                                ${r.id},
+                                '${r.customerName.replace(/'/g,"\\'")}',
+                                '${r.customerPhone}',
+                                ${r.guestCount},
+                                '${dt.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} ${dt.toLocaleDateString('vi-VN')}',
+                                '${r.note?.replace(/'/g,"\\'")||''}'
+                            )">
+                        ✅ Xác nhận
+                    </button>` : ''}
+                    <button onclick="openOrder(${r.tableId || 0})"
+                        style="padding:7px 14px;border-radius:8px;
+                               border:none;background:#1a1a2e;color:#fff;
+                               font-size:12px;font-weight:600;
+                               cursor:pointer;font-family:inherit;">
+                        📋 Mở Order
+                    </button>
+                </div>
+            </div>`;
+    } catch(e) {
+        result.className     = 'checkin-result not-found';
+        result.textContent   = `❌ Không tìm thấy mã "${code}"`;
+        result.style.display = 'block';
+    }
+}
+
+function openOrder(tableId) {
+    if (!tableId) {
+        showToast('Chưa gán bàn, vui lòng xác nhận và chọn bàn trước', 'error');
+        return;
+    }
+    sessionStorage.setItem('currentTableId', tableId);
+    window.location.href = 'order-new.html';
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Đóng modal click ngoài
+document.getElementById('confirmModal')
+        .addEventListener('click', function(e) {
+    if (e.target === this) closeConfirmModal();
+});
+
+// Enter trong ô check-in
+document.getElementById('codeInput')
+        .addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchByCode();
+});
+
+init();
+</script>
+</body>
+</html>

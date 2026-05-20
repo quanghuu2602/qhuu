@@ -1,12 +1,27 @@
-# Các th? m?c biên d?ch (D?u / ? cu?i ?? ch? ??nh ?ây là th? m?c)
+# .NET Build output
 bin/
 obj/
-.vs/
-
-# Các file c?u hình cá nhân c?a ng??i dùng
 *.user
-*.userosscache
-*.sln.docstates
+.vs/
+*.suo
 
-# File c?u hình môi tr??ng (?? tránh l? chu?i k?t n?i Database)
-appsettings.Development.json
+# EF Migrations t?m (gi? l?i Migrations folder nhung b? snapshot n?u mu?n)
+# RestaurantMS.Infrastructure/Data/Migrations/
+
+# App settings nh?y c?m — KHÔNG push lên GitHub
+RestaurantMS.API/appsettings.Development.json
+
+# PDF hoá don dã t?o — không push
+RestaurantMS.API/wwwroot/invoices/
+
+# Node modules n?u có
+node_modules/
+
+# macOS
+.DS_Store
+
+# Visual Studio Code
+.vscode/
+
+# Logs
+*.log

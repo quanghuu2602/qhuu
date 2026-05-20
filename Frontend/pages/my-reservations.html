@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Đặt bàn của tôi — RestaurantMS</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/my-reservations.css">
 </head>
 <body>
 
@@ -128,7 +129,8 @@ let cancelId        = null;
 // ── Load danh sách đặt bàn ────────────────────────────────────
 async function loadReservations() {
     try {
-        allReservations = await reservationApi.getMine();
+        const phone = getPhone();
+        allReservations = await reservationApi.getMine(phone);
         renderList();
     } catch(e) {
         document.getElementById('resList').innerHTML = `

@@ -1,0 +1,205 @@
+/* ════════════════════════════════════════
+   My Reservations Page Styles
+   ════════════════════════════════════════ */
+
+/* ── Category Tabs (giống menu-public) ────────────────────── */
+.cat-tab {
+    padding: 8px 18px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 20px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #555;
+    font-family: inherit;
+}
+
+.cat-tab:hover {
+    border-color: #4f46e5;
+    color: #4f46e5;
+}
+
+.cat-tab.active {
+    background: #4f46e5;
+    color: #fff;
+    border-color: #4f46e5;
+}
+
+/* ── Reservation List ─────────────────────────────────────── */
+.reservation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+/* ── Empty State ──────────────────────────────────────────── */
+.empty-reservations {
+    text-align: center;
+    padding: 60px 20px;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #f0f0f5;
+}
+
+.empty-reservations .icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+}
+
+.empty-reservations h3 {
+    font-size: 18px;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.empty-reservations p {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+/* ── Reservation Card ─────────────────────────────────────── */
+.reservation-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 1px solid #f0f0f5;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    transition: all 0.2s ease;
+}
+
+.reservation-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border-color: #e0e7ff;
+}
+
+/* ── Date Box ─────────────────────────────────────────────── */
+.res-date-box {
+    width: 60px;
+    min-width: 60px;
+    text-align: center;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    border-radius: 14px;
+    padding: 12px 8px;
+    color: #fff;
+}
+
+.res-date-day {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.res-date-mon {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+/* ── Info ─────────────────────────────────────────────────── */
+.res-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.res-code {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4f46e5;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.res-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 6px;
+}
+
+.res-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    font-size: 12.5px;
+    color: #666;
+}
+
+.res-detail span {
+    white-space: nowrap;
+}
+
+/* ── Status Badge ─────────────────────────────────────────── */
+.res-status {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.res-status.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.res-status.confirmed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* ── Cancel Button ────────────────────────────────────────── */
+.res-cancel-btn {
+    padding: 8px 16px;
+    border: 1.5px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.res-cancel-btn:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .reservation-card {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .res-date-box {
+        width: 50px;
+        min-width: 50px;
+        padding: 8px 6px;
+    }
+
+    .res-date-day { font-size: 20px; }
+
+    .res-status {
+        order: 10;
+        width: 100%;
+        text-align: center;
+    }
+
+    .res-cancel-btn {
+        order: 11;
+        width: 100%;
+        text-align: center;
+    }
+}

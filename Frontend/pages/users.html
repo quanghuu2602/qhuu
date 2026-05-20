@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/users.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Quản trị viên</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="dashboard-admin.html">
+                <span class="nav-icon">📊</span> Tổng quan
+            </a>
+            <a class="nav-item" href="menu-management.html">
+                <span class="nav-icon">🍜</span> Quản lý Menu
+            </a>
+            <a class="nav-item" href="table-map.html">
+                <span class="nav-icon">🪑</span> Sơ đồ bàn
+            </a>
+            <a class="nav-item" href="reservations-staff.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+            <a class="nav-item" href="reports.html">
+                <span class="nav-icon">📈</span> Báo cáo
+            </a>
+            <a class="nav-item active" href="users.html">
+                <span class="nav-icon">👥</span> Người dùng
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role">Quản trị viên</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-title">Quản lý người dùng</div>
+        <div class="page-sub" id="userCount">Đang tải...</div>
+
+        <!-- Filter role -->
+        <div class="user-filter-group">
+            <button class="user-filter-btn active"
+                    onclick="filterRole(null, this)">Tất cả</button>
+            <button class="user-filter-btn"
+                    onclick="filterRole('Admin', this)">👑 Admin</button>
+            <button class="user-filter-btn"
+                    onclick="filterRole('Staff', this)">🧑‍💼 Staff</button>
+            <button class="user-filter-btn"
+                    onclick="filterRole('Kitchen', this)">👨‍🍳 Kitchen</button>
+            <button class="user-filter-btn"
+                    onclick="filterRole('Customer', this)">👤 Customer</button>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box" style="max-width:360px;margin-bottom:20px;">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput"
+                   placeholder="Tìm theo tên hoặc email..."
+                   oninput="renderList()">
+        </div>
+
+        <!-- User list -->
+        <div id="userList">
+            <div class="user-loading">⏳ Đang tải...</div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal đổi role -->
+<div class="modal-overlay" id="roleModal">
+    <div class="modal-box role-modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Đổi Role</span>
+            <button class="modal-close"
+                    onclick="closeRoleModal()">×</button>
+        </div>
+        <p class="role-modal-sub" id="roleModalSub"></p>
+        <div class="form-group">
+            <label>Chọn role mới</label>
+            <select id="roleSelect">
+                <option value="Admin">👑 Admin</option>
+                <option value="Staff">🧑‍💼 Staff</option>
+                <option value="Kitchen">👨‍🍳 Kitchen</option>
+                <option value="Customer">👤 Customer</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+            <button onclick="closeRoleModal()" class="btn btn-secondary">Huỷ</button>
+            <button onclick="doChangeRole()" class="btn btn-primary">Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Admin');
+document.getElementById('sidebarName').textContent = getFullName();
+
+let allUsers     = [];
+let activeFilter = null;
+let changeRoleId = null;
+
+const roleColors = {
+    Admin:    { bg:'#F3E5F5', color:'#4A148C' },
+    Staff:    { bg:'#FFF3E0', color:'#E65100' },
+    Kitchen:  { bg:'#E3F2FD', color:'#0D47A1' },
+    Customer: { bg:'#E8F5E9', color:'#1B5E20' },
+};
+
+const roleIcons = {
+    Admin:'👑', Staff:'🧑‍💼', Kitchen:'👨‍🍳', Customer:'👤'
+};
+
+// ── Tạo avatar chữ cái ───────────────────────────────────────
+function getInitials(name) {
+    return name?.split(' ').slice(-2)
+                .map(n => n[0]).join('')
+                .toUpperCase() || '?';
+}
+
+function getAvatarColor(name) {
+    const colors = ['#4f46e5','#16a34a','#dc2626',
+                    '#d97706','#0891b2','#7c3aed'];
+    let hash = 0;
+    for (const c of (name || '')) hash += c.charCodeAt(0);
+    return colors[hash % colors.length];
+}
+
+// ── Khởi động ─────────────────────────────────────────────────
+async function init() {
+    try {
+        allUsers = await userApi.getAll();
+        renderList();
+    } catch(e) {
+        showToast('Lỗi tải dữ liệu: ' + e.message, 'error');
+    }
+}
+
+function filterRole(role, el) {
+    activeFilter = role;
+    document.querySelectorAll('.user-filter-btn')
+            .forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderList();
+}
+
+function renderList() {
+    const search = document.getElementById('searchInput')
+                           .value.toLowerCase();
+    let list = allUsers;
+
+    if (activeFilter)
+        list = list.filter(u => u.role === activeFilter);
+
+    if (search)
+        list = list.filter(u =>
+            u.fullName?.toLowerCase().includes(search) ||
+            u.email?.toLowerCase().includes(search));
+
+    document.getElementById('userCount').textContent =
+        `${list.length} người dùng`;
+
+    if (!list.length) {
+        document.getElementById('userList').innerHTML = `
+            <div class="user-empty">
+                <div class="user-empty-icon">👥</div>
+                <p>Không tìm thấy người dùng nào</p>
+            </div>`;
+        return;
+    }
+
+    document.getElementById('userList').innerHTML =
+        `<div class="user-list">
+            ${list.map(u => buildUserCard(u)).join('')}
+         </div>`;
+}
+
+function buildUserCard(u) {
+    const initials  = getInitials(u.fullName);
+    const avatarBg  = getAvatarColor(u.fullName);
+    const roleStyle = roleColors[u.role] || roleColors.Customer;
+    const icon      = roleIcons[u.role] || '👤';
+
+    return `
+    <div class="user-card ${!u.isActive ? 'inactive' : ''}">
+
+        <!-- Avatar -->
+        <div class="user-avatar" style="background:${avatarBg};">
+            ${initials}
+        </div>
+
+        <!-- Info -->
+        <div class="user-info">
+            <div class="user-name">
+                ${u.fullName}
+                ${!u.isActive
+                    ? '<span class="user-badge locked">Đã khoá</span>'
+                    : ''}
+            </div>
+            <div class="user-email">
+                ${u.email} ${u.phoneNumber ? '· ' + u.phoneNumber : ''}
+            </div>
+            <div class="user-joined">
+                Tham gia: ${new Date(u.createdAt)
+                    .toLocaleDateString('vi-VN')}
+            </div>
+        </div>
+
+        <!-- Role badge -->
+        <span class="user-role-badge"
+              style="background:${roleStyle.bg};color:${roleStyle.color};">
+            ${icon} ${u.role}
+        </span>
+
+        <!-- Actions -->
+        <div class="user-actions">
+            <button onclick="openRoleModal('${u.id}',
+                             '${u.fullName.replace(/'/g,"\\'")}',
+                             '${u.role}')"
+                    class="btn-role">
+                Đổi role
+            </button>
+            <button onclick="toggleActive('${u.id}',
+                             '${u.fullName.replace(/'/g,"\\'")}')"
+                    class="btn-toggle ${u.isActive ? 'lock' : 'unlock'}">
+                ${u.isActive ? 'Khoá' : 'Mở khoá'}
+            </button>
+        </div>
+    </div>`;
+}
+
+// ── Khoá/mở tài khoản ────────────────────────────────────────
+async function toggleActive(id, name) {
+    const u = allUsers.find(u => u.id === id);
+    const action = u?.isActive ? 'khoá' : 'mở khoá';
+    if (!confirm(`Xác nhận ${action} tài khoản "${name}"?`)) return;
+
+    try {
+        const r = await userApi.toggleActive(id);
+        showToast(r.message, 'success');
+        await init();
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// ── Đổi role ─────────────────────────────────────────────────
+function openRoleModal(id, name, currentRole) {
+    changeRoleId = id;
+    document.getElementById('roleModalSub').textContent =
+        `Người dùng: ${name}`;
+    document.getElementById('roleSelect').value = currentRole;
+    document.getElementById('roleModal').classList.add('open');
+}
+
+function closeRoleModal() {
+    document.getElementById('roleModal').classList.remove('open');
+    changeRoleId = null;
+}
+
+async function doChangeRole() {
+    const newRole = document.getElementById('roleSelect').value;
+    try {
+        const r = await userApi.changeRole(changeRoleId, newRole);
+        showToast(r.message, 'success');
+        closeRoleModal();
+        await init();
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+document.getElementById('roleModal')
+        .addEventListener('click', function(e) {
+    if (e.target === this) closeRoleModal();
+});
+
+init();
+</script>
+</body>
+</html>

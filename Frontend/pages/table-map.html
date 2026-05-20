@@ -3,19 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>Sơ đồ bàn — RestaurantMS</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/table-map.css">
 </head>
 <body>
 
 <div class="layout">
 
-    <!-- Sidebar Staff -->
     <aside class="sidebar">
         <div class="sidebar-logo">
             <h2>🍽 RestaurantMS</h2>
             <p id="roleLabel">Nhân viên</p>
         </div>
-        <nav>
+
+        <nav id="navAdmin" style="display:none;">
+            <a class="nav-item" href="dashboard-admin.html">
+                <span class="nav-icon">📊</span> Tổng quan
+            </a>
+            <a class="nav-item active" href="table-map.html">
+                <span class="nav-icon">🪑</span> Sơ đồ bàn
+            </a>
+            <a class="nav-item" href="menu-management.html">
+                <span class="nav-icon">🍜</span> Quản lý Menu
+            </a>
+            <a class="nav-item" href="reservations-staff.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+            <a class="nav-item" href="reports.html">
+                <span class="nav-icon">📈</span> Báo cáo
+            </a>
+            <a class="nav-item" href="users.html">
+                <span class="nav-icon">👥</span> Người dùng
+            </a>
+            <a class="nav-item" href="profile.html">
+                <span class="nav-icon">👤</span> Tài khoản
+            </a>
+        </nav>
+
+        <nav id="navStaff" style="display:none;">
             <a class="nav-item" href="dashboard-staff.html">
                 <span class="nav-icon">📊</span> Tổng quan
             </a>
@@ -32,41 +57,46 @@
                 <span class="nav-icon">📅</span> Đặt bàn
             </a>
         </nav>
+
         <div class="sidebar-bottom">
             <div class="user-info">
                 <div class="user-name" id="sidebarName"></div>
-                <div class="user-role" id="sidebarRole">Nhân viên</div>
+                <div class="user-role" id="sidebarRole"></div>
             </div>
             <button class="btn-logout" onclick="logout()">Đăng xuất</button>
         </div>
     </aside>
 
-    <!-- Main -->
     <main class="main-content">
 
-        <!-- Header -->
-        <div style="display:flex;justify-content:space-between;
-                    align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:12px;">
+        <div class="table-page-header">
             <div>
-                <div class="page-title">Sơ đồ bàn</div>
+                <div class="page-title">🪑 Sơ đồ bàn</div>
                 <div class="page-sub">Click vào bàn để xem tuỳ chọn</div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;">
+            <div class="header-actions">
                 <span class="realtime-badge">
                     <span class="realtime-dot"></span>
                     Cập nhật tự động
                 </span>
+                <button id="btnManage" style="display:none;" onclick="openManagePanel()"
+                        style="padding:10px 18px;border-radius:12px;
+                               border:none;background:rgba(255,255,255,0.2);color:#fff;
+                               font-size:13px;cursor:pointer;font-family:inherit;
+                               font-weight:600;backdrop-filter:blur(10px);
+                               border:1px solid rgba(255,255,255,0.3);">
+                    ⚙️ Quản lý bàn
+                </button>
                 <button onclick="loadTables()"
-                    style="padding:8px 16px;border-radius:10px;
-                           border:1.5px solid #e0e0e0;background:#fff;
-                           font-size:13px;cursor:pointer;font-family:inherit;
-                           font-weight:600;color:#555;">
+                        style="padding:10px 18px;border-radius:12px;
+                               border:1.5px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.15);
+                               font-size:13px;cursor:pointer;font-family:inherit;
+                               font-weight:600;color:#fff;backdrop-filter:blur(10px);">
                     🔄 Làm mới
                 </button>
             </div>
         </div>
 
-        <!-- Stats -->
         <div class="table-stats">
             <div class="stat-card">
                 <div class="stat-icon" style="background:#f0fdf4;">🪑</div>
@@ -98,26 +128,21 @@
             </div>
         </div>
 
-        <!-- Toolbar -->
         <div class="table-toolbar">
             <div class="area-tabs" id="areaTabs"></div>
             <div class="table-legend">
                 <div class="legend-item">
-                    <div class="legend-dot"
-                         style="background:#16a34a;"></div> Trống
+                    <div class="legend-dot" style="background:#16a34a;"></div> Trống
                 </div>
                 <div class="legend-item">
-                    <div class="legend-dot"
-                         style="background:#dc2626;"></div> Đang phục vụ
+                    <div class="legend-dot" style="background:#dc2626;"></div> Đang phục vụ
                 </div>
                 <div class="legend-item">
-                    <div class="legend-dot"
-                         style="background:#d97706;"></div> Đã đặt trước
+                    <div class="legend-dot" style="background:#d97706;"></div> Đã đặt trước
                 </div>
             </div>
         </div>
 
-        <!-- Map -->
         <div class="table-map-wrap" id="tableMap">
             <div style="text-align:center;padding:60px;color:#ccc;">
                 <div style="font-size:48px;margin-bottom:12px;">⏳</div>
@@ -128,7 +153,6 @@
     </main>
 </div>
 
-<!-- Action Panel (slide up khi click bàn) -->
 <div class="table-action-panel" id="actionPanel">
     <button class="panel-close" onclick="closePanel()">×</button>
 
@@ -140,20 +164,75 @@
     <div class="action-btns" id="panelActionBtns"></div>
 </div>
 
-<!-- Toast -->
+<div class="modal-overlay" id="managePanel">
+    <div class="modal-box" style="max-width:520px;">
+        <div class="modal-header">
+            <span class="modal-title">⚙️ Quản lý bàn</span>
+            <button class="modal-close" onclick="closeManagePanel()">×</button>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-bottom:20px;">
+            <button class="cat-tab active" id="tabAdd" onclick="switchManageTab('add')">
+                + Thêm bàn mới
+            </button>
+            <button class="cat-tab" id="tabList" onclick="switchManageTab('list')">
+                📋 Danh sách bàn
+            </button>
+        </div>
+
+        <div id="manageAdd">
+            <div class="form-group">
+                <label>Tên bàn *</label>
+                <input type="text" id="m_name" placeholder="VD: Bàn T1.11">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                    <label>Sức chứa *</label>
+                    <input type="number" id="m_capacity" placeholder="4" min="1" max="20">
+                </div>
+                <div class="form-group">
+                    <label>Khu vực *</label>
+                    <select id="m_area" style="width:100%;padding:11px 14px; border:1.5px solid #e0e0e0;border-radius:8px; font-size:14px;font-family:inherit; outline:none;background:#fff;">
+                    </select>
+                </div>
+            </div>
+            <div class="alert alert-error"   id="manageError"></div>
+            <div class="alert alert-success" id="manageSuccess"></div>
+            <button onclick="addTable()" class="btn btn-primary">
+                + Thêm bàn
+            </button>
+        </div>
+
+        <div id="manageList" style="display:none;">
+            <div style="max-height:360px;overflow-y:auto;" id="manageTableList">
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
+
 <script>
+// Kiểm tra quyền
 requireRole('Admin', 'Staff');
 
-const role = getRole();
+const role = (getRole() || '').toLowerCase();
 document.getElementById('sidebarName').textContent = getFullName();
-document.getElementById('sidebarRole').textContent =
-    role === 'Admin' ? 'Quản trị viên' : 'Nhân viên phục vụ';
-document.getElementById('roleLabel').textContent =
-    role === 'Admin' ? 'Quản trị viên' : 'Nhân viên phục vụ';
+
+// Hiện nav đúng theo role
+if (role === 'admin') {
+    document.getElementById('navAdmin').style.display   = 'block';
+    document.getElementById('sidebarRole').textContent  = 'Quản trị viên';
+    document.getElementById('roleLabel').textContent    = 'Quản trị viên';
+    document.getElementById('btnManage').style.display  = 'inline-flex';
+} else {
+    document.getElementById('navStaff').style.display   = 'block';
+    document.getElementById('sidebarRole').textContent  = 'Nhân viên phục vụ';
+    document.getElementById('roleLabel').textContent    = 'Nhân viên phục vụ';
+}
 
 // ── State ─────────────────────────────────────────────────────
 let allAreas      = [];
@@ -418,19 +497,19 @@ async function changeStatus(tableId, newStatus) {
 function openOrder(tableId) {
     // Đổi trạng thái sang Occupied rồi redirect
     changeStatus(tableId, 'Occupied').then(() => {
-        localStorage.setItem('currentTableId',   tableId);
-        localStorage.setItem('currentTableName', selectedTable?.name || '');
+        sessionStorage.setItem('currentTableId',   tableId);
+        sessionStorage.setItem('currentTableName', selectedTable?.name || '');
         window.location.href = 'order-new.html';
     });
 }
 
 function viewOrder(tableId) {
-    localStorage.setItem('currentTableId', tableId);
+    sessionStorage.setItem('currentTableId', tableId);
     window.location.href = 'order-new.html';
 }
 
 function goCheckout(tableId) {
-    localStorage.setItem('currentTableId', tableId);
+    sessionStorage.setItem('currentTableId', tableId);
     window.location.href = 'checkout.html';
 }
 
@@ -450,8 +529,114 @@ function showToast(msg, type = 'success') {
 
 // Đóng panel khi nhấn Escape
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closePanel();
+    if (e.key === 'Escape') {
+        closePanel();
+        closeManagePanel();
+    }
 });
+
+// ── Quản lý bàn (Admin only) ──────────────────────────────────
+function openManagePanel() {
+    // Điền options khu vực
+    const sel = document.getElementById('m_area');
+    sel.innerHTML = allAreas.map(a =>
+        `<option value="${a.id}">${a.name}</option>`
+    ).join('');
+    renderManageList();
+    document.getElementById('managePanel').classList.add('open');
+}
+
+function closeManagePanel() {
+    document.getElementById('managePanel').classList.remove('open');
+    document.getElementById('manageError').style.display   = 'none';
+    document.getElementById('manageSuccess').style.display = 'none';
+}
+
+function switchManageTab(tab) {
+    const isAdd = tab === 'add';
+    document.getElementById('manageAdd').style.display  = isAdd ? 'block' : 'none';
+    document.getElementById('manageList').style.display = isAdd ? 'none'  : 'block';
+    document.getElementById('tabAdd').classList.toggle('active',  isAdd);
+    document.getElementById('tabList').classList.toggle('active', !isAdd);
+    if (!isAdd) renderManageList();
+}
+
+function renderManageList() {
+    const container = document.getElementById('manageTableList');
+    const allTables = allAreas.flatMap(a =>
+        a.tables.map(t => ({ ...t, areaName: a.name }))
+    );
+    container.innerHTML = allTables.map(t => `
+        <div style="display:flex;align-items:center;gap:12px;
+                    padding:10px 12px;border-radius:10px;
+                    background:#fafafa;border:1px solid #f0f0f0;
+                    margin-bottom:8px;">
+            <div style="flex:1;">
+                <div style="font-size:13px;font-weight:700;
+                            color:#1a1a2e;">${t.name}</div>
+                <div style="font-size:11px;color:#999;">
+                    ${t.areaName} · ${t.capacity} chỗ
+                </div>
+            </div>
+            <span class="table-status-badge ${t.status.toLowerCase()}">
+                ${{ Available:'Trống', Occupied:'Phục vụ', Reserved:'Đặt trước' }[t.status]}
+            </span>
+            <button onclick="deleteTable(${t.id}, '${t.name}')"
+                style="width:30px;height:30px;border-radius:8px;
+                       border:1.5px solid #fecaca;background:#fff5f5;
+                       color:#dc2626;cursor:pointer;font-size:14px;
+                       display:flex;align-items:center;justify-content:center;">
+                🗑
+            </button>
+        </div>
+    `).join('');
+}
+
+async function addTable() {
+    const name     = document.getElementById('m_name').value.trim();
+    const capacity = parseInt(document.getElementById('m_capacity').value);
+    const areaId   = parseInt(document.getElementById('m_area').value);
+    const errEl    = document.getElementById('manageError');
+    const okEl     = document.getElementById('manageSuccess');
+
+    errEl.style.display = 'none';
+    okEl.style.display  = 'none';
+
+    if (!name) {
+        errEl.textContent   = 'Vui lòng nhập tên bàn';
+        errEl.style.display = 'block';
+        return;
+    }
+    if (!capacity || capacity < 1) {
+        errEl.textContent   = 'Sức chứa không hợp lệ';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        await tableApi.addTable({ name, capacity, areaId });
+        okEl.textContent   = `Đã thêm bàn "${name}" thành công!`;
+        okEl.style.display = 'block';
+        document.getElementById('m_name').value     = '';
+        document.getElementById('m_capacity').value = '';
+        await loadTables();
+    } catch(e) {
+        errEl.textContent   = 'Lỗi: ' + e.message;
+        errEl.style.display = 'block';
+    }
+}
+
+async function deleteTable(id, name) {
+    if (!confirm(`Xác nhận xoá bàn "${name}"?`)) return;
+    try {
+        await tableApi.deleteTable(id);
+        showToast(`Đã xoá bàn "${name}"`, 'success');
+        await loadTables();
+        renderManageList();
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
 
 init();
 </script>

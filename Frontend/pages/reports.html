@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/reports.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Quản trị viên</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="dashboard-admin.html">
+                <span class="nav-icon">📊</span> Tổng quan
+            </a>
+            <a class="nav-item" href="menu-management.html">
+                <span class="nav-icon">🍜</span> Quản lý Menu
+            </a>
+            <a class="nav-item" href="table-map.html">
+                <span class="nav-icon">🪑</span> Sơ đồ bàn
+            </a>
+            <a class="nav-item" href="reservations-staff.html">
+                <span class="nav-icon">📅</span> Đặt bàn
+            </a>
+            <a class="nav-item active" href="reports.html">
+                <span class="nav-icon">📈</span> Báo cáo
+            </a>
+            <a class="nav-item" href="users.html">
+                <span class="nav-icon">👥</span> Người dùng
+            </a>
+            <a class="nav-item" href="profile.html">
+                <span class="nav-icon">👤</span> Tài khoản
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role">Quản trị viên</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- Header -->
+        <div class="report-header">
+            <div>
+                <div class="page-title">Báo cáo & Thống kê</div>
+                <div class="report-date-badge" id="reportDate">Hôm nay</div>
+            </div>
+            <!-- Filter tabs -->
+            <div class="report-filter-group">
+                <button class="report-filter-btn active"
+                        onclick="setDays(7, this)">7 ngày</button>
+                <button class="report-filter-btn"
+                        onclick="setDays(14, this)">14 ngày</button>
+                <button class="report-filter-btn"
+                        onclick="setDays(30, this)">30 ngày</button>
+            </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid" id="statCards">
+            <div class="stat-card">
+                <div class="stat-icon blue">💰</div>
+                <div class="stat-info">
+                    <div class="stat-num blue" id="statRevenue">--</div>
+                    <div class="stat-label">Doanh thu hôm nay</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">📋</div>
+                <div class="stat-info">
+                    <div class="stat-num green" id="statOrders">--</div>
+                    <div class="stat-label">Đơn hàng</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">🪑</div>
+                <div class="stat-info">
+                    <div class="stat-num red" id="statOccupied">--</div>
+                    <div class="stat-label">Bàn đang phục vụ</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">✅</div>
+                <div class="stat-info">
+                    <div class="stat-num purple" id="statCompleted">--</div>
+                    <div class="stat-label">Đơn hoàn thành</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts row 1: Revenue line + Payment method pie -->
+        <div class="chart-row two-col">
+            <!-- Line chart doanh thu -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3 class="chart-card-title">Doanh thu theo ngày</h3>
+                    <span class="chart-card-sub" id="revenueTotal"></span>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartRevenue" height="140"></canvas>
+                </div>
+            </div>
+
+            <!-- Pie chart PTTT -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3 class="chart-card-title">Phương thức thanh toán</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartPayMethod" height="160"></canvas>
+                    <div id="payMethodLegend" class="pay-legend"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts row 2: Top items + Hourly -->
+        <div class="chart-row equal">
+            <!-- Bar chart top items -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3 class="chart-card-title">Top 5 món bán chạy</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartTopItems" height="180"></canvas>
+                </div>
+            </div>
+
+            <!-- Bar chart giờ cao điểm -->
+            <div class="chart-card">
+                <div class="chart-card-header">
+                    <h3 class="chart-card-title">Giờ cao điểm</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chartHourly" height="180"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Admin');
+document.getElementById('sidebarName').textContent = getFullName();
+
+let days = 7;
+let chartRevenue, chartPayMethod, chartTopItems, chartHourly;
+
+const fmt = n => n?.toLocaleString('vi-VN') + 'đ';
+
+const COLORS = [
+    '#4f46e5','#16a34a','#dc2626','#d97706',
+    '#0891b2','#7c3aed','#db2777'
+];
+
+// ── Khởi động ─────────────────────────────────────────────────
+async function init() {
+    await Promise.all([
+        loadSummary(),
+        loadRevenue(),
+        loadTopItems(),
+        loadHourly(),
+        loadPaymentMethods(),
+    ]);
+}
+
+function setDays(d, el) {
+    days = d;
+    document.querySelectorAll('.report-filter-btn')
+            .forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    init();
+}
+
+// ── Summary cards ─────────────────────────────────────────────
+async function loadSummary() {
+    try {
+        const data = await reportApi.getSummary();
+        document.getElementById('reportDate').textContent =
+            `Dữ liệu hôm nay — ${data.date}`;
+        document.getElementById('statRevenue').textContent =
+            data.totalRevenue?.toLocaleString('vi-VN') + 'đ';
+        document.getElementById('statOrders').textContent =
+            data.totalOrders;
+        document.getElementById('statOccupied').textContent =
+            `${data.occupiedTables}/${data.totalTables}`;
+        document.getElementById('statCompleted').textContent =
+            data.completedOrders;
+    } catch(e) {
+        console.error('Summary error:', e);
+    }
+}
+
+// ── Doanh thu theo ngày ───────────────────────────────────────
+async function loadRevenue() {
+    try {
+        const data = await reportApi.getRevenue(days);
+        const total = data.reduce((s, d) => s + d.revenue, 0);
+        document.getElementById('revenueTotal').textContent =
+            `Tổng: ${total.toLocaleString('vi-VN')}đ`;
+
+        if (chartRevenue) chartRevenue.destroy();
+
+        chartRevenue = new Chart(
+            document.getElementById('chartRevenue'), {
+            type: 'line',
+            data: {
+                labels:   data.map(d => d.date),
+                datasets: [{
+                    label:           'Doanh thu (đ)',
+                    data:            data.map(d => d.revenue),
+                    borderColor:     '#4f46e5',
+                    backgroundColor: 'rgba(79,70,229,0.08)',
+                    borderWidth:     2.5,
+                    pointRadius:     4,
+                    pointBackgroundColor: '#4f46e5',
+                    tension:         0.4,
+                    fill:            true,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' },
+                        ticks: {
+                            callback: v =>
+                                v >= 1000000
+                                    ? (v/1000000).toFixed(1) + 'M'
+                                    : v >= 1000
+                                        ? (v/1000).toFixed(0) + 'K'
+                                        : v
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    } catch(e) { console.error('Revenue error:', e); }
+}
+
+// ── Top items ─────────────────────────────────────────────────
+async function loadTopItems() {
+    try {
+        const data = await reportApi.getTopItems(5, days);
+        if (chartTopItems) chartTopItems.destroy();
+
+        chartTopItems = new Chart(
+            document.getElementById('chartTopItems'), {
+            type: 'bar',
+            data: {
+                labels:   data.map(d => d.name),
+                datasets: [{
+                    label:           'Số lượng bán',
+                    data:            data.map(d => d.quantity),
+                    backgroundColor: COLORS,
+                    borderRadius:    6,
+                    borderSkipped:   false,
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' }
+                    },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+    } catch(e) { console.error('TopItems error:', e); }
+}
+
+// ── Giờ cao điểm ─────────────────────────────────────────────
+async function loadHourly() {
+    try {
+        const data = await reportApi.getHourly(days);
+        if (chartHourly) chartHourly.destroy();
+
+        const peak = Math.max(...data.map(d => d.orders));
+
+        chartHourly = new Chart(
+            document.getElementById('chartHourly'), {
+            type: 'bar',
+            data: {
+                labels:   data.map(d => d.label),
+                datasets: [{
+                    label: 'Số đơn',
+                    data:  data.map(d => d.orders),
+                    backgroundColor: data.map(d =>
+                        d.orders === peak
+                            ? '#dc2626'
+                            : 'rgba(79,70,229,0.6)'),
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0' },
+                        ticks: { stepSize: 1 }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxRotation: 0,
+                            callback: (val, idx) =>
+                                idx % 2 === 0
+                                    ? data[idx]?.label
+                                    : ''
+                        }
+                    }
+                }
+            }
+        });
+    } catch(e) { console.error('Hourly error:', e); }
+}
+
+// ── Phương thức TT ────────────────────────────────────────────
+async function loadPaymentMethods() {
+    try {
+        const data = await reportApi.getPaymentMethods(days);
+        if (chartPayMethod) chartPayMethod.destroy();
+
+        const methodLabel = {
+            Cash: 'Tiền mặt',
+            BankTransfer: 'Chuyển khoản',
+            Momo: 'MoMo',
+            VnPay: 'VNPay'
+        };
+
+        if (!data.length) {
+            document.getElementById('chartPayMethod')
+                    .parentElement.innerHTML +=
+                '<div class="chart-empty">Chưa có dữ liệu</div>';
+            return;
+        }
+
+        chartPayMethod = new Chart(
+            document.getElementById('chartPayMethod'), {
+            type: 'doughnut',
+            data: {
+                labels: data.map(d =>
+                    methodLabel[d.method] || d.method),
+                datasets: [{
+                    data:            data.map(d => d.count),
+                    backgroundColor: COLORS,
+                    borderWidth:     2,
+                    borderColor:     '#fff',
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx =>
+                                ` ${ctx.label}: ${ctx.raw} đơn`
+                        }
+                    }
+                }
+            }
+        });
+
+        // Legend thủ công
+        document.getElementById('payMethodLegend').innerHTML =
+            data.map((d, i) => `
+                <div class="pay-legend-item">
+                    <div class="pay-legend-dot"
+                         style="background:${COLORS[i]};"></div>
+                    <span class="pay-legend-label">
+                        ${methodLabel[d.method] || d.method}
+                    </span>
+                    <span class="pay-legend-count">${d.count} đơn</span>
+                </div>
+            `).join('');
+
+    } catch(e) { console.error('PayMethod error:', e); }
+}
+
+init();
+</script>
+</body>
+</html>

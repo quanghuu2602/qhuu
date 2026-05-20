@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhà Hàng - Trang Chủ</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/trangchu.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <a href="TrangChu.html" class="navbar-logo">
+            🍽️ NHÀ HÀNG
+        </a>
+        
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+            ☰
+        </button>
+        
+        <ul class="navbar-menu" id="navbarMenu">
+            <li><a href="#home" class="navbar-link">Trang chủ</a></li>
+            <li><a href="#menu" class="navbar-link">Thực đơn</a></li>
+            <li><a href="#why-us" class="navbar-link">Về chúng tôi</a></li>
+            <li><a href="#contact" class="navbar-link">Liên hệ</a></li>
+            <li><a href="login.html" class="navbar-btn btn-login">Đăng nhập</a></li>
+            <li><a href="register.html" class="navbar-btn btn-register">Đăng ký</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Ẩm Thực <span>Đẳng Cấp</span><br>
+                Trải Nghiệm Tuyệt Vời
+            </h1>
+            <p class="hero-subtitle">
+                Đến với chúng tôi để khám phá những hương vị ẩm thực độc đáo,
+                được chế biến công phu từ những nguyên liệu tươi ngon nhất
+            </p>
+            <div class="hero-buttons">
+                <a href="booking.html" class="hero-btn btn-primary">
+                    📋 Đặt Bàn Ngay
+                </a>
+                <a href="#menu" class="hero-btn btn-secondary">
+                    Xem thực đơn ↓
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Category Tabs -->
+    <section class="categories-section">
+        <div class="category-tabs">
+            <button class="category-tab active">🍖 Món chính</button>
+            <button class="category-tab">🥗 Khai vị</button>
+            <button class="category-tab">🍲 Lẩu</button>
+            <button class="category-tab">🍮 Tráng miệng</button>
+            <button class="category-tab">🥤 Đồ uống</button>
+        </div>
+    </section>
+
+    <!-- Featured Menu Section -->
+    <section class="featured-dishes" id="menu">
+        <div class="section-header">
+            <h2 class="section-title">🍜 Món Ăn Nổi Bật</h2>
+            <p class="section-subtitle">
+                Những món ăn được khách hàng yêu thích nhất tại nhà hàng
+            </p>
+        </div>
+        
+        <div class="dishes-grid">
+            <div class="dish-card">
+                <div class="dish-image">
+                    <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=300&fit=crop" 
+                         alt="Bò lúc lắc"
+                         onerror="this.style.display='none';">
+                    <span class="dish-badge">Hot</span>
+                </div>
+                <div class="dish-content">
+                    <div class="dish-category">Món Chính</div>
+                    <h3 class="dish-name">Bò Lúc Lắc Mỹ</h3>
+                    <p class="dish-description">Thịt bò Mỹ mềm ngon, nêm nếm vừa ăn, khoai tây chiên giòn</p>
+                    <div class="dish-footer">
+                        <span class="dish-price">269.000đ</span>
+                        <button class="dish-btn">Đặt hàng</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dish-card">
+                <div class="dish-image">
+                    <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop" 
+                         alt="Gà nướng"
+                         onerror="this.style.display='none';">
+                    <span class="dish-badge">Mới</span>
+                </div>
+                <div class="dish-content">
+                    <div class="dish-category">Món Chính</div>
+                    <h3 class="dish-name">Gà Nướng Muối</h3>
+                    <p class="dish-description">Gà ta nguyên con ướp muối riềng, nướng vàng giòn thơm lừng</p>
+                    <div class="dish-footer">
+                        <span class="dish-price">189.000đ</span>
+                        <button class="dish-btn">Đặt hàng</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dish-card">
+                <div class="dish-image">
+                    <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop" 
+                         alt="Lẩu thái"
+                         onerror="this.style.display='none';">
+                    <span class="dish-badge">Đặc sản</span>
+                </div>
+                <div class="dish-content">
+                    <div class="dish-category">Lẩu</div>
+                    <h3 class="dish-name">Lẩu Thái Tomyum</h3>
+                    <p class="dish-description">Nước lẩu chua cay đậm đà, hải sản tươi ngon số lượng nhiều</p>
+                    <div class="dish-footer">
+                        <span class="dish-price">319.000đ</span>
+                        <button class="dish-btn">Đặt hàng</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dish-card">
+                <div class="dish-image">
+                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop" 
+                         alt="Hải sản"
+                         onerror="this.style.display='none';">
+                    <span class="dish-badge">Khuyến mãi</span>
+                </div>
+                <div class="dish-content">
+                    <div class="dish-category">Hải Sản</div>
+                    <h3 class="dish-name">Mực Nướng Tỏi</h3>
+                    <p class="dish-description">Mực tươi lớn nướng vàng, bơ tỏi béo ngậy thơm nức mũi</p>
+                    <div class="dish-footer">
+                        <span class="dish-price">179.000đ</span>
+                        <button class="dish-btn">Đặt hàng</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dish-card">
+                <div class="dish-image">
+                    <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop" 
+                         alt="Cá hồi"
+                         onerror="this.style.display='none';">
+                    <span class="dish-badge">Cao cấp</span>
+                </div>
+                <div class="dish-content">
+                    <div class="dish-category">Món Chính</div>
+                    <h3 class="dish-name">Cá Hồi Sáp</h3>
+                    <p class="dish-description">Cá hồi tươi ướp gia vị, áp chảo vàng mềm mại thơm ngon</p>
+                    <div class="dish-footer">
+                        <span class="dish-price">299.000đ</span>
+                        <button class="dish-btn">Đặt hàng</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dish-card">
+                <div class="dish-image">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop" 
+                         alt="Salad"
+                         onerror="this.style.display='none';">
+                    <span class="dish-badge">An lành</span>
+                </div>
+                <div class="dish-content">
+                    <div class="dish-category">Khai Vị</div>
+                    <h3 class="dish-name">Salad Rau Xanh</h3>
+                    <p class="dish-description">Rau tươi sạch mới hái, sốt mayonnaise đặc sản nhà hàng</p>
+                    <div class="dish-footer">
+                        <span class="dish-price">79.000đ</span>
+                        <button class="dish-btn">Đặt hàng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="view-all-container">
+            <a href="menu-public.html" class="view-all-btn">
+                📖 Xem Toàn Bộ Thực Đơn
+            </a>
+        </div>
+    </section>
+
+    <!-- Why Us Section -->
+    <section class="why-us" id="why-us">
+        <div class="section-header">
+            <h2 class="section-title">✨ Tại Sao Chọn Chúng Tôi</h2>
+            <p class="section-subtitle">
+                Chúng tôi luôn nỗ lực mang đến trải nghiệm ẩm thực tốt nhất cho bạn
+            </p>
+        </div>
+
+        <div class="why-us-grid">
+            <div class="why-us-item">
+                <div class="why-us-icon">🥬</div>
+                <h3 class="why-us-title">Nguyên liệu tươi sạch</h3>
+                <p class="why-us-text">100% nguyên liệu được chọn lọc kỹ lưỡng, nguồn gốc rõ ràng, giao hàng hàng ngày</p>
+            </div>
+            <div class="why-us-item">
+                <div class="why-us-icon">👨‍🍳</div>
+                <h3 class="why-us-title">Đầu bếp chuyên nghiệp</h3>
+                <p class="why-us-text">Đội ngũ đầu bếp 10 năm kinh nghiệm, được đào tạo bài bản chuyên nghiệp</p>
+            </div>
+            <div class="why-us-item">
+                <div class="why-us-icon">🍽️</div>
+                <h3 class="why-us-title">Dịch vụ chu đáo</h3>
+                <p class="why-us-text">Nhân viên nhiệt tình, thân thiện, phục vụ nhanh chóng chỉ trong 15 phút</p>
+            </div>
+            <div class="why-us-item">
+                <div class="why-us-icon">💳</div>
+                <h3 class="why-us-title">Giá cả hợp lý</h3>
+                <p class="why-us-text">Chất lượng cao cấp, giá cả phải chăng phù hợp với mọi đối tượng khách hàng</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>🍽️ NHÀ HÀNG</h3>
+                <p>
+                    Nhà hàng chuyên phục vụ các món ăn Á - Âu đậm đà hương vị, không gian sang trọng, dịch vụ chuyên nghiệp.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-link">f</a>
+                    <a href="#" class="social-link">i</a>
+                    <a href="#" class="social-link">t</a>
+                    <a href="#" class="social-link">g</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Liên kết nhanh</h3>
+                <ul class="footer-links">
+                    <li><a href="#home">Trang chủ</a></li>
+                    <li><a href="#menu">Thực đơn</a></li>
+                    <li><a href="booking.html">Đặt bàn</a></li>
+                    <li><a href="menu-public.html">Xem menu</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Tài khoản</h3>
+                <ul class="footer-links">
+                    <li><a href="login.html">Đăng nhập</a></li>
+                    <li><a href="register.html">Đăng ký</a></li>
+                    <li><a href="my-reservations.html">Đặt bàn của tôi</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Liên hệ</h3>
+                <ul class="footer-links">
+                    <li>📍 123 Đường ABC, Quận 1, TP.HCM</li>
+                    <li>📞 0909 999 888</li>
+                    <li>📧 contact@nhahang.vn</li>
+                    <li>⏰ 10:00 - 22:00 hàng ngày</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 Nhà Hàng. Tất cả quyền được bảo lưu.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('navbarMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    document.getElementById('navbarMenu').classList.remove('active');
+                }
+            });
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.dish-card, .why-us-item').forEach(el => {
+            el.classList.add('fade-in-up');
+            observer.observe(el);
+        });
+
+        // Category tabs click effect
+        document.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

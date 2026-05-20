@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Gọi món — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/orders.css">
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Gọi món</p>
+        </div>
+        <nav id="dynamicNav"></nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+        <div class="user-role" id="sidebarRoleLabel">Nhân viên</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content" style="padding:20px 24px;">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;
+                    align-items:center;margin-bottom:16px;">
+            <div>
+                <div class="page-title" id="pageTitle">Gọi món</div>
+                <div class="page-sub" id="pageSub">Đang tải...</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button onclick="goBack()"
+                    style="padding:9px 16px;border-radius:10px;
+                           border:1.5px solid #e0e0e0;background:#fff;
+                           font-size:13px;cursor:pointer;font-family:inherit;
+                           font-weight:600;color:#555;">
+                    ← Sơ đồ bàn
+                </button>
+            </div>
+        </div>
+
+        <!-- Order layout -->
+        <div class="order-layout">
+
+            <!-- Trái: Chọn món -->
+            <div class="menu-panel">
+                <div class="menu-panel-header">
+                    <div class="search-box" style="flex:1;">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="menuSearch"
+                               placeholder="Tìm món..."
+                               oninput="filterMenu()">
+                    </div>
+                </div>
+
+                <!-- Category tabs ngang -->
+                <div style="display:flex;gap:6px;padding:10px 16px;
+                            overflow-x:auto;border-bottom:1px solid #f0f0f0;
+                            flex-shrink:0;">
+                    <button class="cat-tab active" style="white-space:nowrap;"
+                            onclick="filterCat(null, this)">
+                        Tất cả
+                    </button>
+                    <div id="catTabsOrder"></div>
+                </div>
+
+                <div class="menu-panel-body" id="menuPanelBody">
+                    <div style="text-align:center;padding:40px;color:#ccc;">
+                        ⏳ Đang tải menu...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phải: Order hiện tại -->
+            <div class="order-panel">
+                <div class="order-panel-header">
+                    <div class="order-panel-title" id="orderTableName">
+                        Chưa chọn bàn
+                    </div>
+                    <div class="order-panel-sub" id="orderStatus">
+                        Chờ gọi món
+                    </div>
+                </div>
+
+                <div class="order-items" id="orderItemsList">
+                    <div class="order-empty">
+                        <div class="icon">🍽</div>
+                        <p>Chưa có món nào<br>
+                           Chọn món bên trái để thêm</p>
+                    </div>
+                </div>
+
+                <div class="order-footer">
+                    <div class="order-total-row">
+                        <span class="order-total-label">Tạm tính</span>
+                        <span class="order-total-amount"
+                              id="orderTotal">0đ</span>
+                    </div>
+
+                    <!-- Ghi chú -->
+                    <input type="text" id="orderNote"
+                           placeholder="Ghi chú cho bàn..."
+                           style="width:100%;margin-bottom:10px;
+                                  box-sizing:border-box;">
+
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <button onclick="sendToKitchen()"
+                            id="btnSendKitchen"
+                            style="width:100%;padding:13px;border:none;
+                                   border-radius:12px;background:#4f46e5;
+                                   color:#fff;font-size:15px;font-weight:700;
+                                   cursor:pointer;font-family:inherit;
+                                   transition:all .15s;"
+                            onmouseover="this.style.background='#4338ca'"
+                            onmouseout="this.style.background='#4f46e5'">
+                            🍳 Gửi bếp
+                        </button>
+                        <button onclick="goCheckout()"
+                            style="width:100%;padding:11px;
+                                   border:1.5px solid #e0e0e0;
+                                   border-radius:12px;background:#fff;
+                                   font-size:14px;font-weight:600;
+                                   cursor:pointer;font-family:inherit;
+                                   color:#555;">
+                            💳 Thanh toán
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal ghi chú món -->
+<div class="modal-overlay" id="noteModal">
+    <div class="modal-box" style="max-width:380px;">
+        <div class="modal-header">
+            <span class="modal-title" id="noteModalTitle">
+                Ghi chú đặc biệt
+            </span>
+            <button class="modal-close"
+                    onclick="closeNoteModal()">×</button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:12px;">
+            VD: ít đá, không hành, chín kỹ...
+        </p>
+        <input type="text" id="noteInput"
+               placeholder="Nhập ghi chú..."
+               style="width:100%;box-sizing:border-box;margin-bottom:16px;">
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="closeNoteModal()"
+                style="padding:10px 18px;border:1.5px solid #e0e0e0;
+                       border-radius:8px;background:#fff;font-size:13px;
+                       cursor:pointer;font-family:inherit;">
+                Bỏ qua
+            </button>
+            <button onclick="confirmAddItem()"
+                class="btn btn-primary" style="width:auto;">
+                Thêm món
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SignalR client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Admin', 'Staff');
+document.getElementById('sidebarName').textContent = getFullName();
+
+// Render sidebar động theo role
+const role = getRole();
+const navEl = document.getElementById('dynamicNav');
+if (role === 'Admin') {
+    document.getElementById('sidebarRoleLabel').textContent = 'Quản trị viên';
+    navEl.innerHTML = `
+        <a class="nav-item" href="dashboard-admin.html">
+            <span class="nav-icon">📊</span> Tổng quan
+        </a>
+        <a class="nav-item" href="menu-management.html">
+            <span class="nav-icon">🍜</span> Quản lý Menu
+        </a>
+        <a class="nav-item" href="table-map.html">
+            <span class="nav-icon">🪑</span> Sơ đồ bàn
+        </a>
+        <a class="nav-item active" href="orders.html">
+            <span class="nav-icon">📋</span> Đơn hàng
+        </a>
+        <a class="nav-item" href="reservations-staff.html">
+            <span class="nav-icon">📅</span> Đặt bàn
+        </a>
+        <a class="nav-item" href="reports.html">
+            <span class="nav-icon">📈</span> Báo cáo
+        </a>
+        <a class="nav-item" href="users.html">
+            <span class="nav-icon">👥</span> Ngườii dùng
+        </a>
+    `;
+} else {
+    navEl.innerHTML = `
+        <a class="nav-item" href="table-map.html">
+            <span class="nav-icon">🪑</span> Sơ đồ bàn
+        </a>
+        <a class="nav-item active" href="order-new.html">
+            <span class="nav-icon">📋</span> Gọi món
+        </a>
+        <a class="nav-item" href="checkout.html">
+            <span class="nav-icon">💳</span> Thanh toán
+        </a>
+    `;
+}
+
+// ── State ─────────────────────────────────────────────────────
+let tableId    = parseInt(sessionStorage.getItem('currentTableId') || '0');
+let tableName  = sessionStorage.getItem('currentTableName') || 'Chưa chọn';
+let orderId    = null;
+let allMenus   = [];
+let categories = [];
+let activeCat  = null;
+let pendingItem = null;  // món đang chờ thêm ghi chú
+
+const catEmoji = {
+    'Khai vị':'🥗','Món chính':'🍖',
+    'Lẩu & Combo':'🍲','Tráng miệng':'🍮','Đồ uống':'🥤'
+};
+
+// ── Khởi động ─────────────────────────────────────────────────
+async function init() {
+    // Nếu admin mở từ trang quản lý đơn hàng
+    const viewId = sessionStorage.getItem('viewOrderId');
+    if (viewId) {
+        sessionStorage.removeItem('viewOrderId');
+        try {
+            const order = await orderApi.getById(viewId);
+            if (order) {
+                orderId = order.id || order.orderId;
+                tableId = order.tableId;
+                tableName = order.tableName || `Bàn #${order.tableId}`;
+                document.getElementById('pageTitle').textContent = `Xem đơn #${orderId}`;
+                document.getElementById('orderTableName').textContent = tableName;
+                await loadMenu();
+                renderOrder(order);
+                return;
+            }
+        } catch (e) {
+            showToast('Không tìm thấy đơn hàng', 'error');
+        }
+    }
+
+    if (!tableId) {
+        showToast('Chưa chọn bàn, quay lại sơ đồ bàn', 'error');
+        setTimeout(() => window.location.href = 'table-map.html', 1500);
+        return;
+    }
+
+    document.getElementById('pageTitle').textContent =
+        `Gọi món — ${tableName}`;
+    document.getElementById('orderTableName').textContent = tableName;
+
+    await Promise.all([loadMenu(), loadOrCreateOrder()]);
+}
+
+// ── Load menu ─────────────────────────────────────────────────
+async function loadMenu() {
+    try {
+        categories = await menuApi.getCategories();
+        allMenus   = await menuApi.getAll();
+
+        // Render category tabs
+        const tabsEl = document.getElementById('catTabsOrder');
+        tabsEl.innerHTML = categories.map(c => `
+            <button class="cat-tab" style="white-space:nowrap;"
+                    onclick="filterCat(${c.id}, this)">
+                ${catEmoji[c.name]||'🍽'} ${c.name}
+            </button>`).join('');
+
+        renderMenu();
+    } catch(e) {
+        showToast('Lỗi tải menu: ' + e.message, 'error');
+    }
+}
+
+function filterCat(catId, el) {
+    activeCat = catId;
+    document.querySelectorAll('.cat-tab')
+            .forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderMenu();
+}
+
+function filterMenu() {
+    renderMenu();
+}
+
+function renderMenu() {
+    const search  = document.getElementById('menuSearch').value.toLowerCase();
+    const body    = document.getElementById('menuPanelBody');
+    let items     = allMenus;
+
+    if (activeCat)
+        items = items.filter(m => m.categoryId === activeCat);
+    if (search)
+        items = items.filter(m => m.name.toLowerCase().includes(search));
+
+    if (!items.length) {
+        body.innerHTML = `<div style="text-align:center;padding:40px;color:#ccc;">
+                              Không tìm thấy món nào
+                          </div>`;
+        return;
+    }
+
+    body.innerHTML = items.map(m => `
+        <div class="menu-mini-card ${!m.isAvailable ? 'unavailable' : ''}"
+             onclick="${m.isAvailable ? `openNoteModal(${m.id},'${m.name.replace(/'/g,"\\'")}',${m.price})` : ''}">
+            <div class="menu-mini-emoji">
+                ${catEmoji[m.categoryName] || '🍽'}
+            </div>
+            <div style="flex:1;">
+                <div class="menu-mini-name">${m.name}</div>
+                ${m.tags?.length
+                    ? `<div style="font-size:10px;color:#888;">
+                           ${m.tags.join(' · ')}
+                       </div>`
+                    : ''}
+            </div>
+            <div>
+                <div class="menu-mini-price">
+                    ${m.price.toLocaleString('vi-VN')}đ
+                </div>
+                ${!m.isAvailable
+                    ? `<div class="menu-mini-avail">Hết món</div>`
+                    : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── Load hoặc tạo order cho bàn ───────────────────────────────
+async function loadOrCreateOrder() {
+    try {
+        const existing = await orderApi.getByTable(tableId);
+        // FIX: Đảm bảo lấy đúng id từ kết quả trả về
+        orderId = existing?.id || existing?.orderId; 
+        renderOrder(existing);
+    } catch(e) {
+        try {
+            const created = await orderApi.create(tableId);
+            // FIX: Chốt chặn để lấy được ID dù Backend trả về kiểu gì
+            orderId = created?.id || created?.orderId;
+            renderOrder(null);
+        } catch(e2) {
+            showToast('Lỗi: ' + e2.message, 'error');
+        }
+    }
+}
+
+// ── Render order ──────────────────────────────────────────────
+function renderOrder(order) {
+    const list  = document.getElementById('orderItemsList');
+    const total = document.getElementById('orderTotal');
+    const statusEl = document.getElementById('orderStatus');
+
+    // 1. Kiểm tra nếu order trống hoặc không có chi tiết món ăn
+    if (!order || !order.details || order.details.length === 0) {
+        list.innerHTML = `
+            <div class="order-empty">
+                <div class="icon">🍽</div>
+                <p>Chưa có món nào<br>Chọn món bên trái để thêm</p>
+            </div>`;
+        total.textContent = '0đ';
+        
+        if (statusEl) {
+            statusEl.textContent = '⏳ Chờ gọi món';
+        }
+        return;
+    }
+
+    // 2. Cập nhật trạng thái Order an toàn
+    const statusMap = {
+        'Pending': '⏳ Chờ gọi món',
+        'Cooking': '🍳 Đang nấu',
+        'Ready': '✅ Món đã xong',
+        'Served': '🍽 Đã mang ra',
+        'Completed': '🏁 Hoàn tất',
+        'Cancelled': '❌ Đã hủy'
+    };
+    
+    if (statusEl) {
+        statusEl.textContent = statusMap[order.status] || order.status || 'Chờ gọi món';
+    }
+
+    // 3. Render danh sách món ăn với Optional Chaining (?.)
+    list.innerHTML = order.details.map(d => {
+        // Phòng hờ trường hợp dữ liệu bị null bên trong mảng
+        if (!d) return '';
+
+        // Xử lý chuỗi ghi chú để tránh lỗi cú pháp trong thuộc tính onclick
+        const safeNote = (d.specialNote || '').replace(/'/g, "\\'");
+
+        return `
+            <div class="order-item-row">
+                <div style="flex:1;">
+                    <div class="order-item-name">${d.menuItemName || 'Món ăn'}</div>
+                    ${d.specialNote 
+                        ? `<div class="order-item-note">📝 ${d.specialNote}</div>` 
+                        : ''}
+                </div>
+                <div class="qty-control">
+                    <button class="qty-btn" 
+                            onclick="changeQty(${d.id}, ${d.quantity - 1}, '${safeNote}')">
+                        −
+                    </button>
+                    <span class="qty-num">${d.quantity || 0}</span>
+                    <button class="qty-btn" 
+                            onclick="changeQty(${d.id}, ${d.quantity + 1}, '${safeNote}')">
+                        +
+                    </button>
+                </div>
+                <div class="order-item-price">
+                    ${((d.unitPrice || 0) * (d.quantity || 0)).toLocaleString('vi-VN')}đ
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // 4. Cập nhật tổng tiền
+    const totalAmount = order.totalAmount || 0;
+    total.textContent = totalAmount.toLocaleString('vi-VN') + 'đ';
+}
+// ── Modal ghi chú trước khi thêm món ─────────────────────────
+function openNoteModal(itemId, itemName, price) {
+    pendingItem = { itemId, itemName, price };
+    document.getElementById('noteModalTitle').textContent =
+        `Thêm: ${itemName}`;
+    document.getElementById('noteInput').value = '';
+    document.getElementById('noteModal').classList.add('open');
+    document.getElementById('noteInput').focus();
+}
+
+function closeNoteModal() {
+    document.getElementById('noteModal').classList.remove('open');
+    pendingItem = null;
+}
+
+async function confirmAddItem() {
+    // FIX: Kiểm tra pendingItem trước khi lấy itemId
+    if (!pendingItem || !orderId) {
+        showToast('Vui lòng chọn lại món ăn', 'error');
+        return;
+    }
+    
+    const note = document.getElementById('noteInput').value.trim();
+    // Tạo bản sao dữ liệu để an toàn
+    const idToSubmit = pendingItem.itemId; 
+    const nameToDisplay = pendingItem.itemName;
+
+    closeNoteModal();
+
+    try {
+        // Gửi idToSubmit thay vì pendingItem.itemId (đề phòng biến bị reset sớm)
+        const updated = await orderApi.addItem(orderId, idToSubmit, 1, note || null);
+        renderOrder(updated);
+        showToast(`Đã thêm ${nameToDisplay}`, 'success');
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// Enter trong ô ghi chú
+document.getElementById('noteInput')
+        .addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmAddItem();
+});
+
+// ── Đổi số lượng ──────────────────────────────────────────────
+async function changeQty(detailId, newQty, note) {
+    try {
+        const updated = await orderApi.updateItem(
+            orderId, detailId, newQty, note || null);
+        renderOrder(updated);
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// ── Gửi bếp ──────────────────────────────────────────────────
+async function sendToKitchen() {
+    if (!orderId) return;
+    const btn = document.getElementById('btnSendKitchen');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Đang gửi...';
+
+    try {
+        await orderApi.sendToKitchen(orderId);
+        showToast('Đã gửi bếp thành công! 🍳', 'success');
+
+        // Reload lại order để thấy status mới
+        const updated = await orderApi.getById(orderId);
+        renderOrder(updated);
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = '🍳 Gửi bếp';
+    }
+}
+
+// ── Thanh toán ────────────────────────────────────────────────
+function goCheckout() {
+    sessionStorage.setItem('currentOrderId', orderId);
+    window.location.href = 'checkout.html';
+}
+
+function goBack() {
+    window.location.href = 'table-map.html';
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Đóng modal click ngoài
+document.getElementById('noteModal')
+        .addEventListener('click', function(e) {
+    if (e.target === this) closeNoteModal();
+});
+
+init();
+</script>
+</body>
+</html>

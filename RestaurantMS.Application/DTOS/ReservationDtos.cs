@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RestaurantMS.Application.DTOs;
+﻿namespace RestaurantMS.Application.DTOs;
 
 public record CreateReservationRequest(
     string CustomerName,
@@ -12,6 +6,10 @@ public record CreateReservationRequest(
     int GuestCount,
     DateTime ReservedAt,
     string? Note
+);
+
+public record ConfirmReservationRequest(
+    int? TableId   // Gán bàn cụ thể khi xác nhận
 );
 
 public record ReservationDto(
@@ -23,5 +21,6 @@ public record ReservationDto(
     string? Note,
     string BookingCode,
     bool IsConfirmed,
-    int? TableId
+    int? TableId,
+    string? TableName   // Thêm tên bàn để FE hiện
 );

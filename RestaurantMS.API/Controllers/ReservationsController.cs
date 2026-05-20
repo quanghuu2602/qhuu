@@ -12,15 +12,15 @@ namespace RestaurantMS.API.Controllers;
 public class ReservationsController : ControllerBase
 {
     private readonly IReservationRepository _repo;
-    public ReservationsController(IReservationRepository repo) => _repo = repo;
+    public ReservationsController(IReservationRepository repo)
+        => _repo = repo;
 
-    // POST /api/reservations — Customer đặt bàn
+    // ── Customer đặt bàn ──────────────────────────────────────
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create(
         [FromBody] CreateReservationRequest req)
     {
-        // Validate giờ mở cửa 10:00 - 22:00
         var hour = req.ReservedAt.Hour;
         if (hour < 10 || hour >= 22)
             return BadRequest(new
@@ -28,14 +28,13 @@ public class ReservationsController : ControllerBase
                 message = "Nhà hàng phục vụ từ 10:00 đến 22:00"
             });
 
-        // Không đặt trong quá khứ
         if (req.ReservedAt < DateTime.Now)
             return BadRequest(new
             {
                 message = "Không thể đặt bàn trong quá khứ"
             });
 
-        var reservation = new Reservation
+        var r = new Reservation
         {
             CustomerName = req.CustomerName,
             CustomerPhone = req.CustomerPhone,
@@ -44,32 +43,66 @@ public class ReservationsController : ControllerBase
             Note = req.Note,
         };
 
-        var created = await _repo.CreateAsync(reservation);
+        var created = await _repo.CreateAsync(r);
         return Ok(ToDto(created));
     }
 
-    // GET /api/reservations/mine — Customer xem đặt bàn của mình
-    [HttpGet("mine")]
-    [Authorize]
-    public async Task<IActionResult> GetMine()
-    {
-        // Lấy phone từ claim hoặc trả về theo userId
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        // Tạm dùng: trả về tất cả — sẽ filter theo userId ở sprint sau
-        var list = await _repo.GetAllAsync();
-        return Ok(list.Select(ToDto));
-    }
-
-    // GET /api/reservations — Admin xem tất cả
+    // ── Admin/Staff xem tất cả — có filter ───────────────────
     [HttpGet]
     [Authorize(Roles = "Admin,Staff")]
-    public async Task<IActionResult> GetAll([FromQuery] DateTime? date = null)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] DateTime? date = null,
+        [FromQuery] bool? isConfirmed = null)
     {
-        var list = await _repo.GetAllAsync(date);
+        var list = await _repo.GetAllAsync(date, isConfirmed);
         return Ok(list.Select(ToDto));
     }
 
-    // PATCH /api/reservations/5/cancel
+    // ── Customer xem đặt bàn của mình (theo SĐT) ─────────────
+    [HttpGet("mine")]
+    [Authorize]
+    public async Task<IActionResult> GetMine(
+        [FromQuery] string? phone = null)
+    {
+        // Nếu không truyền phone thì lấy tất cả (tạm thời)
+        IEnumerable<Reservation> list;
+        if (!string.IsNullOrEmpty(phone))
+            list = await _repo.GetMineAsync(phone);
+        else
+            list = await _repo.GetAllAsync();
+
+        return Ok(list.Select(ToDto));
+    }
+
+    // ── Tìm theo mã booking — Staff check-in ─────────────────
+    [HttpGet("by-code/{code}")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<IActionResult> GetByCode(string code)
+    {
+        var r = await _repo.GetByCodeAsync(code);
+        if (r is null)
+            return NotFound(new { message = "Không tìm thấy mã booking" });
+        return Ok(ToDto(r));
+    }
+
+    // ── Admin/Staff xác nhận + gán bàn ───────────────────────
+    [HttpPatch("{id}/confirm")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<IActionResult> Confirm(int id,
+        [FromBody] ConfirmReservationRequest req)
+    {
+        try
+        {
+            await _repo.ConfirmAsync(id, req.TableId);
+            return Ok(new { message = "Đã xác nhận đặt bàn" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    // ── Huỷ (Customer hoặc Admin/Staff) ──────────────────────
     [HttpPatch("{id}/cancel")]
     [Authorize]
     public async Task<IActionResult> Cancel(int id)
@@ -85,24 +118,17 @@ public class ReservationsController : ControllerBase
         }
     }
 
-    // PATCH /api/reservations/5/confirm — Admin xác nhận
-    [HttpPatch("{id}/confirm")]
-    [Authorize(Roles = "Admin,Staff")]
-    public async Task<IActionResult> Confirm(int id)
-    {
-        try
-        {
-            await _repo.ConfirmAsync(id);
-            return Ok(new { message = "Đã xác nhận đặt bàn" });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-    }
-
+    // ── Helper ────────────────────────────────────────────────
     private static ReservationDto ToDto(Reservation r) => new(
-        r.Id, r.CustomerName, r.CustomerPhone,
-        r.GuestCount, r.ReservedAt, r.Note,
-        r.BookingCode, r.IsConfirmed, r.TableId);
+        r.Id,
+        r.CustomerName,
+        r.CustomerPhone,
+        r.GuestCount,
+        r.ReservedAt,
+        r.Note,
+        r.BookingCode,
+        r.IsConfirmed,
+        r.TableId,
+        r.Table?.Name
+    );
 }

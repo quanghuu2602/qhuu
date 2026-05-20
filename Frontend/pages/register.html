@@ -4,170 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký — RestaurantMS</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/register.css">
 </head>
 <body>
-
-<div class="auth-wrapper">
-    <div class="auth-card">
-
-        <div class="auth-logo">
-            <h1>🍽 RestaurantMS</h1>
-            <p>Tạo tài khoản khách hàng</p>
-        </div>
-
-        <div class="alert alert-error"   id="alertError"></div>
-        <div class="alert alert-success" id="alertSuccess"></div>
-
-        <form id="registerForm">
-
-            <div class="form-group">
-                <label for="fullName">Họ và tên</label>
-                <input type="text" id="fullName"
-                       placeholder="Nguyễn Văn A" required>
-                <div class="error-msg" id="nameError">
-                    Vui lòng nhập họ tên
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email"
-                       placeholder="email@example.com" required>
-                <div class="error-msg" id="emailError">
-                    Email không hợp lệ
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Số điện thoại</label>
-                <input type="tel" id="phone"
-                       placeholder="0901234567">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Mật khẩu</label>
-                <input type="password" id="password"
-                       placeholder="Tối thiểu 6 ký tự" required>
-                <div class="error-msg" id="passError">
-                    Mật khẩu tối thiểu 6 ký tự
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="confirmPassword">Xác nhận mật khẩu</label>
-                <input type="password" id="confirmPassword"
-                       placeholder="Nhập lại mật khẩu" required>
-                <div class="error-msg" id="confirmError">
-                    Mật khẩu không khớp
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary" id="btnRegister">
-                Đăng ký
-            </button>
-
-        </form>
-
-        <div class="auth-link">
-            Đã có tài khoản?
-            <a href="login.html">Đăng nhập</a>
-        </div>
-
+    <!-- Floating background shapes -->
+    <div class="bg-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
     </div>
-</div>
 
-<script src="../js/api.js"></script>
-<script src="../js/auth.js"></script>
-<script>
-    const form       = document.getElementById('registerForm');
-    const btnReg     = document.getElementById('btnRegister');
-    const alertErr   = document.getElementById('alertError');
-    const alertOk    = document.getElementById('alertSuccess');
+    <div class="register-container">
+        <div class="register-card">
+            <!-- Decorative elements -->
+            <div class="decoration decoration-1"></div>
+            <div class="decoration decoration-2"></div>
 
-    function showError(id, msg) {
-        const el = document.getElementById(id);
-        el.textContent    = msg;
-        el.style.display  = 'block';
-    }
+            <!-- Logo -->
+            <div class="register-logo">
+                <div class="logo-icon">🍽️</div>
+                <h1>RestaurantMS</h1>
+                <p>Tạo tài khoản khách hàng</p>
+            </div>
 
-    function clearErrors() {
-        ['nameError','emailError','passError','confirmError'].forEach(id => {
-            document.getElementById(id).style.display = 'none';
+            <!-- Alerts -->
+            <div class="alert alert-error"   id="alertError"></div>
+            <div class="alert alert-success" id="alertSuccess"></div>
+
+            <!-- Form -->
+            <form class="register-form" id="registerForm">
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="fullName">Họ và tên</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="fullName" placeholder="Nguyễn Văn A" required>
+                            <i>👤</i>
+                        </div>
+                        <div class="error-msg" id="nameError">Vui lòng nhập họ tên</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="email">Email</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" placeholder="email@example.com" required>
+                            <i>📧</i>
+                        </div>
+                        <div class="error-msg" id="emailError">Email không hợp lệ</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="phone">Số điện thoại</label>
+                        <div class="input-wrapper">
+                            <input type="tel" id="phone" placeholder="0901234567">
+                            <i>📱</i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Mật khẩu</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" placeholder="Tối thiểu 6 ký tự" required>
+                            <i>🔒</i>
+                        </div>
+                        <div class="error-msg" id="passError">Mật khẩu tối thiểu 6 ký tự</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Xác nhận mật khẩu</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu" required>
+                            <i>🔐</i>
+                        </div>
+                        <div class="error-msg" id="confirmError">Mật khẩu không khớp</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-register" id="btnRegister">
+                    Đăng ký
+                </button>
+            </form>
+
+            <div class="login-link">
+                Đã có tài khoản? <a href="login.html">Đăng nhập</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        const form       = document.getElementById('registerForm');
+        const btnReg     = document.getElementById('btnRegister');
+        const alertErr   = document.getElementById('alertError');
+        const alertOk    = document.getElementById('alertSuccess');
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent    = msg;
+            el.style.display  = 'block';
+        }
+
+        function clearErrors() {
+            ['nameError','emailError','passError','confirmError'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            ['fullName','email','password','confirmPassword'].forEach(id => {
+                document.getElementById(id).classList.remove('error');
+            });
+            alertErr.style.display = 'none';
+            alertOk.style.display  = 'none';
+        }
+
+        function validate() {
+            clearErrors();
+            let ok = true;
+
+            const fullName       = document.getElementById('fullName').value.trim();
+            const email          = document.getElementById('email').value.trim();
+            const password       = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!fullName) {
+                document.getElementById('fullName').classList.add('error');
+                showError('nameError', 'Vui lòng nhập họ tên');
+                ok = false;
+            }
+
+            if (!email.includes('@')) {
+                document.getElementById('email').classList.add('error');
+                showError('emailError', 'Email không hợp lệ');
+                ok = false;
+            }
+
+            if (password.length < 6) {
+                document.getElementById('password').classList.add('error');
+                showError('passError', 'Mật khẩu tối thiểu 6 ký tự');
+                ok = false;
+            }
+
+            if (password !== confirmPassword) {
+                document.getElementById('confirmPassword').classList.add('error');
+                showError('confirmError', 'Mật khẩu không khớp');
+                ok = false;
+            }
+
+            return ok;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validate()) return;
+
+            btnReg.disabled   = true;
+            btnReg.innerHTML  = '<span class="spinner"></span> Đang đăng ký...';
+
+            try {
+                const data = await authApi.register(
+                    document.getElementById('fullName').value.trim(),
+                    document.getElementById('email').value.trim(),
+                    document.getElementById('password').value,
+                    document.getElementById('phone').value.trim()
+                );
+
+                // Đăng ký xong tự login luôn
+                saveAuth(data);
+
+                alertOk.textContent   = 'Đăng ký thành công! Đang chuyển trang...';
+                alertOk.style.display = 'block';
+
+                setTimeout(() => redirectByRole(data.role), 1200);
+
+            } catch (err) {
+                alertErr.textContent   = err.message;
+                alertErr.style.display = 'block';
+                btnReg.disabled        = false;
+                btnReg.innerHTML       = 'Đăng ký';
+            }
         });
-        ['fullName','email','password','confirmPassword'].forEach(id => {
-            document.getElementById(id).classList.remove('error');
-        });
-        alertErr.style.display = 'none';
-        alertOk.style.display  = 'none';
-    }
-
-    function validate() {
-        clearErrors();
-        let ok = true;
-
-        const fullName       = document.getElementById('fullName').value.trim();
-        const email          = document.getElementById('email').value.trim();
-        const password       = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (!fullName) {
-            document.getElementById('fullName').classList.add('error');
-            showError('nameError', 'Vui lòng nhập họ tên');
-            ok = false;
-        }
-
-        if (!email.includes('@')) {
-            document.getElementById('email').classList.add('error');
-            showError('emailError', 'Email không hợp lệ');
-            ok = false;
-        }
-
-        if (password.length < 6) {
-            document.getElementById('password').classList.add('error');
-            showError('passError', 'Mật khẩu tối thiểu 6 ký tự');
-            ok = false;
-        }
-
-        if (password !== confirmPassword) {
-            document.getElementById('confirmPassword').classList.add('error');
-            showError('confirmError', 'Mật khẩu không khớp');
-            ok = false;
-        }
-
-        return ok;
-    }
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!validate()) return;
-
-        btnReg.disabled   = true;
-        btnReg.innerHTML  = '<div class="spinner"></div> Đang đăng ký...';
-
-        try {
-            const data = await authApi.register(
-                document.getElementById('fullName').value.trim(),
-                document.getElementById('email').value.trim(),
-                document.getElementById('password').value,
-                document.getElementById('phone').value.trim()
-            );
-
-            // Đăng ký xong tự login luôn
-            saveAuth(data);
-
-            alertOk.textContent   = 'Đăng ký thành công! Đang chuyển trang...';
-            alertOk.style.display = 'block';
-
-            setTimeout(() => redirectByRole(data.role), 1200);
-
-        } catch (err) {
-            alertErr.textContent   = err.message;
-            alertErr.style.display = 'block';
-            btnReg.disabled        = false;
-            btnReg.innerHTML       = 'Đăng ký';
-        }
-    });
-</script>
+    </script>
 </body>
 </html>

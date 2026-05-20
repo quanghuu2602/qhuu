@@ -1,0 +1,217 @@
+/* ════════════════════════════════════════
+   RESERVATIONS STAFF
+   ════════════════════════════════════════ */
+.res-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.date-picker-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 8px 14px;
+}
+
+.date-picker-wrap input[type="date"] {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1a1a2e;
+    font-weight: 600;
+    background: transparent;
+}
+
+.res-filter-tabs {
+    display: flex;
+    gap: 4px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 3px;
+}
+
+.res-filter-tab {
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    background: transparent;
+    color: #999;
+    transition: all 0.15s;
+}
+
+.res-filter-tab.active {
+    background: #fff;
+    color: #1a1a2e;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.res-table {
+    width: 100%;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+    border-collapse: collapse;
+}
+
+.res-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.res-table td {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #333;
+    border-bottom: 1px solid #f8f8f8;
+    vertical-align: middle;
+}
+
+.res-table tr:last-child td { border-bottom: none; }
+.res-table tr:hover td { background: #fafafa; }
+
+.res-name {
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 2px;
+}
+
+.res-phone {
+    font-size: 12px;
+    color: #888;
+}
+
+.res-time {
+    font-size: 15px;
+    font-weight: 800;
+    color: #4f46e5;
+}
+
+.res-date-small {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.res-code-small {
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #4f46e5;
+    background: #eff6ff;
+    padding: 3px 8px;
+    border-radius: 5px;
+}
+
+.res-guests {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.confirm-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.confirm-btn:hover { background: #4338ca; }
+.confirm-btn:disabled {
+    background: #c7d2fe;
+    cursor: not-allowed;
+}
+
+.cancel-btn-sm {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #fecaca;
+    background: transparent;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.cancel-btn-sm:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+.checkin-panel {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #f0f0f0;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.checkin-panel input {
+    flex: 1;
+    min-width: 180px;
+    padding: 11px 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    outline: none;
+    letter-spacing: 2px;
+}
+
+.checkin-panel input:focus { border-color: #4f46e5; }
+
+.checkin-result {
+    margin-top: 14px;
+    display: none;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    width: 100%;
+}
+
+.checkin-result.found {
+    background: #f0fdf4;
+    border: 1.5px solid #86efac;
+    color: #15803d;
+}
+
+.checkin-result.not-found {
+    background: #fef2f2;
+    border: 1.5px solid #fecaca;
+    color: #b91c1c;
+}

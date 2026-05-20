@@ -3,44 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <title>Màn hình Bếp — RestaurantMS</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/kitchen.css">
 </head>
 <body>
 
-<div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <h2>🍽 RestaurantMS</h2>
-            <p>Khu vực bếp</p>
-        </div>
-        <nav>
-            <a class="nav-item active" href="dashboard-kitchen.html">
-                <span class="nav-icon">👨‍🍳</span> Danh sách món
-            </a>
-        </nav>
-        <div class="sidebar-bottom">
-            <div class="user-info">
-                <div class="user-name" id="sidebarName">...</div>
-                <div class="user-role">Bếp</div>
+<div class="kitchen-wrap">
+    <div class="kitchen-header">
+        <div>
+            <div class="kitchen-title">👨‍🍳 Màn hình Bếp</div>
+            <div class="kitchen-sub" id="kitchenSub">
+                Đang kết nối...
             </div>
-            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
         </div>
-    </aside>
-
-    <main class="main-content">
-        <div class="page-title">Màn hình bếp</div>
-        <div class="page-sub">Danh sách món cần làm — cập nhật real-time</div>
-
-        <div style="background:#fff;border-radius:12px;padding:24px;border:1px solid #eee;text-align:center;color:#aaa;">
-            👨‍🍳 KOT real-time sẽ hiển thị ở đây (Ngày 17)
+        <div style="display:flex;align-items:center;gap:16px;">
+            <div class="conn-status" id="connStatus"
+                 style="color:rgba(255,255,255,0.5);">
+                <div class="conn-dot connecting" id="connDot"></div>
+                <span id="connText">Đang kết nối</span>
+            </div>
+            <a href="profile.html"
+               style="padding:8px 16px;border-radius:8px;
+                      border:1px solid rgba(255,255,255,0.2);
+                      background:transparent;color:rgba(255,255,255,0.6);
+                      font-size:13px;cursor:pointer;font-family:inherit;
+                      text-decoration:none;display:inline-block;">
+                👤 Tài khoản
+            </a>
+            <button onclick="logout()"
+                style="padding:8px 16px;border-radius:8px;
+                       border:1px solid rgba(255,255,255,0.2);
+                       background:transparent;color:rgba(255,255,255,0.6);
+                       font-size:13px;cursor:pointer;font-family:inherit;">
+                Đăng xuất
+            </button>
         </div>
-    </main>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:flex;gap:12px;margin-bottom:24px;">
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;
+                    padding:14px 20px;flex:1;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#fbbf24;"
+                 id="kotTotal">0</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);
+                        font-weight:600;text-transform:uppercase;
+                        letter-spacing:0.5px;">Đang chờ</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;
+                    padding:14px 20px;flex:1;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#22c55e;"
+                 id="kotDone">0</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);
+                        font-weight:600;text-transform:uppercase;
+                        letter-spacing:0.5px;">Đã xong</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;
+                    padding:14px 20px;flex:1;text-align:center;">
+            <div style="font-size:13px;font-weight:700;color:#fff;"
+                 id="currentTime">--:--</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);
+                        font-weight:600;text-transform:uppercase;
+                        letter-spacing:0.5px;">Giờ hiện tại</div>
+        </div>
+    </div>
+
+    <!-- KOT Grid -->
+    <div class="kitchen-grid" id="kotGrid">
+        <div class="no-kot">
+            <div class="icon">⏳</div>
+            <p>Đang kết nối màn hình bếp...</p>
+        </div>
+    </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script>
-    requireRole('Kitchen', 'Admin');
-    document.getElementById('sidebarName').textContent = getFullName();
+requireRole('Kitchen', 'Admin');
+
+// ── State ─────────────────────────────────────────────────────
+let kotList    = [];  // { orderId, tableName, items, sentAt, done }
+let doneCount  = 0;
+let connection = null;
+
+// ── Đồng hồ ──────────────────────────────────────────────────
+function updateClock() {
+    const now = new Date();
+    document.getElementById('currentTime').textContent =
+        now.toLocaleTimeString('vi-VN', {
+            hour:'2-digit', minute:'2-digit', second:'2-digit'
+        });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── Kết nối SignalR ───────────────────────────────────────────
+async function connectSignalR() {
+    const token = getToken();
+
+    connection = new signalR.HubConnectionBuilder()
+        .withUrl(`${BASE_URL.replace('/api','')}/hubs/kitchen`, {
+            accessTokenFactory: () => token
+        })
+        .withAutomaticReconnect([1000, 2000, 5000, 10000])
+        .build();
+
+    // Nhận KOT mới từ bếp
+    connection.on('NewKOT', (kot) => {
+        kotList.unshift({ ...kot, done: false });
+        renderKotGrid();
+        updateStats();
+        playSound();
+        showToast(`📋 Order mới — ${kot.tableName}`, 'success');
+    });
+
+    // Staff báo món đã mang ra
+    connection.on('OrderReady', (data) => {
+        showToast(`✅ Order #${data.orderId} đã mang ra bàn`, 'success');
+    });
+
+    // Sự kiện reconnect
+    connection.onreconnecting(() => setConnStatus('connecting'));
+    connection.onreconnected(() => setConnStatus('connected'));
+    connection.onclose(()     => setConnStatus('disconnected'));
+
+    try {
+        await connection.start();
+        setConnStatus('connected');
+        document.getElementById('kitchenSub').textContent =
+            `Xin chào, ${getFullName()} · Màn hình đang hoạt động`;
+        renderKotGrid();  // hiện trạng thái ban đầu
+    } catch(e) {
+        setConnStatus('disconnected');
+        showToast('Không kết nối được SignalR', 'error');
+    }
+}
+
+function setConnStatus(status) {
+    const dot  = document.getElementById('connDot');
+    const text = document.getElementById('connText');
+    const map  = {
+        connected:    { cls:'connected',    txt:'Đã kết nối' },
+        connecting:   { cls:'connecting',   txt:'Đang kết nối lại...' },
+        disconnected: { cls:'disconnected', txt:'Mất kết nối' },
+    };
+    dot.className  = `conn-dot ${map[status].cls}`;
+    text.textContent = map[status].txt;
+}
+
+// ── Render KOT ────────────────────────────────────────────────
+function renderKotGrid() {
+    const grid = document.getElementById('kotGrid');
+
+    const pending = kotList.filter(k => !k.done);
+
+    if (!pending.length && !kotList.length) {
+        grid.innerHTML = `
+            <div class="no-kot">
+                <div class="icon">✅</div>
+                <p>Không có món nào cần làm</p>
+                <p style="font-size:12px;margin-top:8px;
+                           color:rgba(255,255,255,0.2);">
+                    Đang chờ order từ nhân viên...
+                </p>
+            </div>`;
+        return;
+    }
+
+    grid.innerHTML = kotList.map((kot, idx) => `
+        <div class="kot-card ${kot.done ? 'done' : ''}"
+             id="kot-${idx}">
+            <div class="kot-header">
+                <div class="kot-table">${kot.tableName}</div>
+                <div class="kot-time">${kot.sentAt}</div>
+            </div>
+            <div class="kot-body">
+                ${kot.items.map(item => `
+                    <div class="kot-item">
+                        <div class="kot-item-left">
+                            <div class="kot-item-name">
+                                ${item.name}
+                            </div>
+                            ${item.note
+                                ? `<div class="kot-item-note">
+                                       ⚠️ ${item.note}
+                                   </div>`
+                                : ''}
+                        </div>
+                        <div class="kot-item-qty">x${item.quantity}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="kot-footer">
+                ${!kot.done
+                    ? `<button class="btn-done"
+                               onclick="markDone(${idx}, ${kot.orderId})">
+                           ✅ Đã xong — ${kot.tableName}
+                       </button>`
+                    : `<span style="color:#6b7280;font-size:13px;
+                                    font-weight:500;flex:1;text-align:center;">
+                           ✓ Đã hoàn thành
+                       </span>`
+                }
+            </div>
+        </div>
+    `).join('');
+}
+
+// ── Đánh dấu xong ─────────────────────────────────────────────
+async function markDone(idx, orderId) {
+    try {
+        await orderApi.markReady(orderId);
+        kotList[idx].done = true;
+        doneCount++;
+        renderKotGrid();
+        updateStats();
+        showToast('Đã báo xong! Nhân viên sẽ mang ra.', 'success');
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function updateStats() {
+    const pending = kotList.filter(k => !k.done).length;
+    document.getElementById('kotTotal').textContent = pending;
+    document.getElementById('kotDone').textContent  = doneCount;
+}
+
+// ── Âm thanh thông báo ────────────────────────────────────────
+function playSound() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.value     = 0.3;
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+        setTimeout(() => {
+            const osc2 = ctx.createOscillator();
+            const g2   = ctx.createGain();
+            osc2.connect(g2);
+            g2.connect(ctx.destination);
+            osc2.frequency.value = 1100;
+            g2.gain.value        = 0.2;
+            osc2.start();
+            osc2.stop(ctx.currentTime + 0.15);
+        }, 180);
+    } catch(e) {}
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+connectSignalR();
 </script>
 </body>
 </html>

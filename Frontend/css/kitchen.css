@@ -1,0 +1,179 @@
+/* ════════════════════════════════════════
+   KITCHEN DISPLAY - Màn hình Bếp
+   ════════════════════════════════════════ */
+body { 
+    background: #0f172a; 
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+.kitchen-wrap {
+    min-height: 100vh;
+    padding: 20px;
+    background: #0f172a;
+}
+
+.kitchen-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.kitchen-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.kitchen-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+}
+
+.conn-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.conn-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.conn-dot.connected   { background: #22c55e; }
+.conn-dot.connecting  { background: #f59e0b; }
+.conn-dot.disconnected{ background: #ef4444; }
+
+.no-kot {
+    text-align: center;
+    padding: 80px 20px;
+    color: rgba(255,255,255,0.2);
+}
+.no-kot .icon { font-size: 64px; margin-bottom: 16px; }
+.no-kot p { font-size: 16px; font-weight: 500; }
+
+/* ── Kitchen Grid ──────────────────────────────────────────── */
+.kitchen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* ── KOT Card ──────────────────────────────────────────────── */
+.kot-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 2px solid #fde68a;
+    overflow: hidden;
+    animation: slideDown 0.4s ease;
+    color: #1a1a2e;
+}
+
+.kot-card.done {
+    opacity: 0.4;
+    border-color: #374151;
+}
+
+@keyframes slideDown {
+    from { opacity:0; transform:translateY(-16px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+.kot-header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kot-table {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.kot-time {
+    font-size: 11px;
+    opacity: 0.6;
+    font-family: monospace;
+}
+
+.kot-body {
+    padding: 14px 16px;
+}
+
+.kot-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px dashed #f0f0f0;
+    font-size: 14px;
+}
+
+.kot-item:last-child { border-bottom: none; }
+
+.kot-item-left { flex: 1; }
+.kot-item-name { font-weight: 600; color: #1a1a2e; }
+.kot-item-note { font-size: 11px; color: #f59e0b; margin-top: 2px; }
+.kot-item-qty  {
+    font-size: 16px;
+    font-weight: 800;
+    color: #4f46e5;
+    min-width: 28px;
+    text-align: right;
+}
+
+.kot-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 8px;
+}
+
+.btn-done {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.btn-done:hover { background: #15803d; }
+.btn-done:active { transform: scale(0.97); }
+
+/* ── Toast override for dark theme ─────────────────────────── */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    z-index: 9999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #16a34a; }
+.toast.error   { background: #ef4444; }

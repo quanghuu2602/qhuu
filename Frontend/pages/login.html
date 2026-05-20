@@ -4,125 +4,138 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập — RestaurantMS</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/login.css">
 </head>
 <body>
-
-<div class="auth-wrapper">
-    <div class="auth-card">
-
-        <div class="auth-logo">
-            <h1>🍽 RestaurantMS</h1>
-            <p>Hệ thống quản lý nhà hàng</p>
-        </div>
-
-        <!-- Thông báo lỗi -->
-        <div class="alert alert-error" id="alertError"></div>
-
-        <form id="loginForm">
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email"
-                       placeholder="admin@restaurant.com" required>
-                <div class="error-msg" id="emailError">Email không hợp lệ</div>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Mật khẩu</label>
-                <input type="password" id="password"
-                       placeholder="••••••••" required>
-                <div class="error-msg" id="passwordError">
-                    Mật khẩu tối thiểu 6 ký tự và có chữ cái
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary" id="btnLogin">
-                Đăng nhập
-            </button>
-
-        </form>
-
-        <div class="auth-link">
-            Chưa có tài khoản?
-            <a href="register.html">Đăng ký ngay</a>
-        </div>
-
+    <!-- Floating background shapes -->
+    <div class="bg-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
     </div>
-</div>
 
-<script src="../js/api.js"></script>
-<script src="../js/auth.js"></script>
-<script>
-    // Nếu đã đăng nhập rồi thì redirect luôn
-    if (getToken()) {
-        redirectByRole(getRole());
-    }
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Decorative elements -->
+            <div class="decoration decoration-1"></div>
+            <div class="decoration decoration-2"></div>
 
-    const form     = document.getElementById('loginForm');
-    const btnLogin = document.getElementById('btnLogin');
-    const alertErr = document.getElementById('alertError');
+            <!-- Logo -->
+            <div class="login-logo">
+                <div class="logo-icon">🍽️</div>
+                <h1>RestaurantMS</h1>
+                <p>Hệ thống quản lý nhà hàng</p>
+            </div>
 
-    // ── Validate ───────────────────────────────────────────────
-    function validate() {
-        let ok = true;
-        const email    = document.getElementById('email');
-        const password = document.getElementById('password');
-        const emailErr = document.getElementById('emailError');
-        const passErr  = document.getElementById('passwordError');
+            <!-- Alert -->
+            <div class="alert alert-error" id="alertError"></div>
 
-        // Reset
-        email.classList.remove('error');
-        password.classList.remove('error');
-        emailErr.style.display = 'none';
-        passErr.style.display  = 'none';
+            <!-- Form -->
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" placeholder="admin@restaurant.com" required>
+                        <i>📧</i>
+                    </div>
+                    <div class="error-msg" id="emailError">Email không hợp lệ</div>
+                </div>
 
-        if (!email.value.includes('@')) {
-            email.classList.add('error');
-            emailErr.style.display = 'block';
-            ok = false;
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <i>🔒</i>
+                    </div>
+                    <div class="error-msg" id="passwordError">Mật khẩu tối thiểu 6 ký tự</div>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnLogin">
+                    Đăng nhập
+                </button>
+            </form>
+
+            <div class="register-link">
+                Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // Nếu đã đăng nhập rồi thì redirect luôn
+        if (getToken()) {
+            redirectByRole(getRole());
         }
 
-        if (password.value.length < 6) {
-            password.classList.add('error');
-            passErr.style.display = 'block';
-            ok = false;
+        const form     = document.getElementById('loginForm');
+        const btnLogin = document.getElementById('btnLogin');
+        const alertErr = document.getElementById('alertError');
+
+        // ── Validate ───────────────────────────────────────────────
+        function validate() {
+            let ok = true;
+            const email    = document.getElementById('email');
+            const password = document.getElementById('password');
+            const emailErr = document.getElementById('emailError');
+            const passErr  = document.getElementById('passwordError');
+
+            // Reset
+            email.classList.remove('error');
+            password.classList.remove('error');
+            emailErr.style.display = 'none';
+            passErr.style.display  = 'none';
+
+            if (!email.value.includes('@')) {
+                email.classList.add('error');
+                emailErr.style.display = 'block';
+                ok = false;
+            }
+
+            if (password.value.length < 6) {
+                password.classList.add('error');
+                passErr.style.display = 'block';
+                ok = false;
+            }
+
+            return ok;
         }
 
-        return ok;
-    }
+        // ── Submit ─────────────────────────────────────────────────
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            alertErr.style.display = 'none';
 
-    // ── Submit ─────────────────────────────────────────────────
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        alertErr.style.display = 'none';
+            if (!validate()) return;
 
-        if (!validate()) return;
+            // Hiện loading
+            btnLogin.disabled = true;
+            btnLogin.innerHTML =
+                '<span class="spinner"></span> Đang đăng nhập...';
 
-        // Hiện loading
-        btnLogin.disabled = true;
-        btnLogin.innerHTML =
-            '<div class="spinner"></div> Đang đăng nhập...';
+            try {
+                const data = await authApi.login(
+                    document.getElementById('email').value.trim(),
+                    document.getElementById('password').value
+                );
 
-        try {
-            const data = await authApi.login(
-                document.getElementById('email').value.trim(),
-                document.getElementById('password').value
-            );
+                // Lưu token + thông tin
+                saveAuth(data);
 
-            // Lưu token + thông tin
-            saveAuth(data);
+                // Redirect theo role
+                redirectByRole(data.role);
 
-            // Redirect theo role
-            redirectByRole(data.role);
-
-        } catch (err) {
-            alertErr.textContent    = err.message;
-            alertErr.style.display  = 'block';
-            btnLogin.disabled       = false;
-            btnLogin.innerHTML      = 'Đăng nhập';
-        }
-    });
-</script>
+            } catch (err) {
+                alertErr.textContent    = err.message;
+                alertErr.style.display  = 'block';
+                btnLogin.disabled       = false;
+                btnLogin.innerHTML      = 'Đăng nhập';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/profile.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p id="roleLabel">Tài khoản</p>
+        </div>
+        <nav id="profileNav"></nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role" id="sidebarRole"></div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-title">Tài khoản của tôi</div>
+        <div class="page-sub">Quản lý thông tin cá nhân</div>
+
+        <div class="profile-grid" id="profileContent">
+            <div class="profile-loading">⏳ Đang tải...</div>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireAuth();
+
+const role     = getRole();
+const navLinks = {
+    Admin: `
+        <a class="nav-item" href="dashboard-admin.html"><span class="nav-icon">📊</span> Tổng quan</a>
+        <a class="nav-item active" href="profile.html"><span class="nav-icon">👤</span> Tài khoản</a>`,
+    Staff: `
+        <a class="nav-item" href="table-map.html"><span class="nav-icon">🪑</span> Sơ đồ bàn</a>
+        <a class="nav-item active" href="profile.html"><span class="nav-icon">👤</span> Tài khoản</a>`,
+    Kitchen: `
+        <a class="nav-item" href="dashboard-kitchen.html"><span class="nav-icon">👨‍🍳</span> Màn hình bếp</a>
+        <a class="nav-item active" href="profile.html"><span class="nav-icon">👤</span> Tài khoản</a>`,
+    Customer: `
+        <a class="nav-item" href="dashboard-customer.html"><span class="nav-icon">🏠</span> Trang chủ</a>
+        <a class="nav-item" href="menu-public.html"><span class="nav-icon">🍜</span> Thực đơn</a>
+        <a class="nav-item" href="booking.html"><span class="nav-icon">📅</span> Đặt bàn</a>
+        <a class="nav-item" href="my-reservations.html"><span class="nav-icon">📋</span> Đặt bàn của tôi</a>
+        <a class="nav-item active" href="profile.html"><span class="nav-icon">👤</span> Tài khoản</a>`,
+};
+
+document.getElementById('profileNav').innerHTML =
+    navLinks[role] || navLinks.Customer;
+document.getElementById('sidebarName').textContent = getFullName();
+document.getElementById('sidebarRole').textContent = role;
+document.getElementById('roleLabel').textContent   = role;
+
+async function init() {
+    const me = await userApi.getMe();
+    renderProfile(me);
+}
+
+function renderProfile(me) {
+    const initials = me.fullName?.split(' ')
+        .slice(-2).map(n => n[0]).join('').toUpperCase() || '?';
+
+    document.getElementById('profileContent').innerHTML = `
+
+    <!-- Avatar + info -->
+    <div class="profile-card profile-avatar-section">
+        <div class="profile-avatar">${initials}</div>
+        <div class="profile-name">${me.fullName}</div>
+        <div class="profile-email">${me.email}</div>
+        <span class="profile-role-badge">${me.role}</span>
+    </div>
+
+    <!-- Cập nhật thông tin -->
+    <div class="profile-section-card">
+        <h3 class="profile-section-title">✏️ Cập nhật thông tin</h3>
+        <div class="form-group">
+            <label>Họ và tên</label>
+            <input type="text" id="upName" value="${me.fullName}">
+        </div>
+        <div class="form-group">
+            <label>Số điện thoại</label>
+            <input type="tel" id="upPhone"
+                   value="${me.phoneNumber || ''}"
+                   placeholder="0901234567">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" value="${me.email}" disabled
+                   style="background:#f5f5f5;color:#999;cursor:not-allowed;">
+        </div>
+        <button onclick="updateProfile()"
+            class="btn btn-primary" id="btnUpdate">
+            Lưu thay đổi
+        </button>
+    </div>
+
+    <!-- Đổi mật khẩu -->
+    <div class="profile-pass-section">
+        <h3 class="profile-section-title">🔒 Đổi mật khẩu</h3>
+        <div class="form-group">
+            <label>Mật khẩu hiện tại</label>
+            <input type="password" id="curPass" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu mới</label>
+            <input type="password" id="newPass"
+                   placeholder="Tối thiểu 6 ký tự">
+        </div>
+        <div class="form-group">
+            <label>Xác nhận mật khẩu mới</label>
+            <input type="password" id="confirmPass"
+                   placeholder="Nhập lại mật khẩu mới">
+        </div>
+        <div class="alert alert-error"   id="passError"></div>
+        <div class="alert alert-success" id="passSuccess"></div>
+        <button onclick="changePassword()"
+            class="btn btn-primary" id="btnPass">
+            Đổi mật khẩu
+        </button>
+    </div>`;
+}
+
+async function updateProfile() {
+    const btn = document.getElementById('btnUpdate');
+    btn.disabled    = true;
+    btn.textContent = 'Đang lưu...';
+    try {
+        await userApi.updateMe(
+            document.getElementById('upName').value.trim(),
+            document.getElementById('upPhone').value.trim()
+        );
+        localStorage.setItem('fullName',
+            document.getElementById('upName').value.trim());
+        showToast('Đã cập nhật thông tin!', 'success');
+    } catch(e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Lưu thay đổi';
+    }
+}
+
+async function changePassword() {
+    const cur     = document.getElementById('curPass').value;
+    const newP    = document.getElementById('newPass').value;
+    const confirm = document.getElementById('confirmPass').value;
+    const errEl   = document.getElementById('passError');
+    const okEl    = document.getElementById('passSuccess');
+
+    errEl.style.display = 'none';
+    okEl.style.display  = 'none';
+
+    if (!cur || !newP || !confirm) {
+        errEl.textContent   = 'Vui lòng điền đầy đủ';
+        errEl.style.display = 'block';
+        return;
+    }
+    if (newP.length < 6) {
+        errEl.textContent   = 'Mật khẩu mới tối thiểu 6 ký tự';
+        errEl.style.display = 'block';
+        return;
+    }
+    if (newP !== confirm) {
+        errEl.textContent   = 'Mật khẩu xác nhận không khớp';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    const btn = document.getElementById('btnPass');
+    btn.disabled    = true;
+    btn.textContent = 'Đang xử lý...';
+
+    try {
+        await userApi.changePassword(cur, newP);
+        okEl.textContent   = '✅ Đổi mật khẩu thành công!';
+        okEl.style.display = 'block';
+        document.getElementById('curPass').value     = '';
+        document.getElementById('newPass').value     = '';
+        document.getElementById('confirmPass').value = '';
+    } catch(e) {
+        errEl.textContent   = '❌ ' + e.message;
+        errEl.style.display = 'block';
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Đổi mật khẩu';
+    }
+}
+
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>

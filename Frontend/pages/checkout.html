@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanh toán — RestaurantMS</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/payment.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h2>🍽 RestaurantMS</h2>
+            <p>Thanh toán</p>
+        </div>
+        <nav>
+            <a class="nav-item" href="table-map.html">
+                <span class="nav-icon">🪑</span> Sơ đồ bàn
+            </a>
+            <a class="nav-item" href="order-new.html">
+                <span class="nav-icon">📋</span> Gọi món
+            </a>
+            <a class="nav-item active" href="checkout.html">
+                <span class="nav-icon">💳</span> Thanh toán
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="user-info">
+                <div class="user-name" id="sidebarName"></div>
+                <div class="user-role">Nhân viên</div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- Loading -->
+        <div id="screenLoading" class="checkout-loading">
+            <div class="checkout-loading-icon">⏳</div>
+            <div class="checkout-loading-text">Đang tải thông tin...</div>
+        </div>
+
+        <!-- Checkout form -->
+        <div id="screenCheckout" style="display:none;">
+            <div class="checkout-header">
+                <div>
+                    <div class="page-title" id="checkoutTitle">Thanh toán</div>
+                    <div class="page-sub" id="checkoutSub"></div>
+                </div>
+                <button onclick="window.location.href='table-map.html'" class="btn-back">
+                    ← Quay lại
+                </button>
+            </div>
+
+            <div class="checkout-grid">
+
+                <!-- Trái: Chi tiết order -->
+                <div>
+                    <div class="checkout-card">
+                        <h3>📋 Danh sách món</h3>
+                        <div class="checkout-items-list" id="checkoutItems"></div>
+                    </div>
+
+                    <!-- Phí dịch vụ -->
+                    <div class="checkout-card">
+                        <h3>⚙️ Tuỳ chọn</h3>
+                        <div class="form-group">
+                            <label>Phí dịch vụ (%)</label>
+                            <select id="serviceFee" class="service-fee-select" onchange="recalculate()">
+                                <option value="0">Không có</option>
+                                <option value="5" selected>5%</option>
+                                <option value="10">10%</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phải: Tổng tiền + thanh toán -->
+                <div>
+                    <div class="checkout-card">
+                        <h3>🏷 Voucher / Mã giảm giá</h3>
+                        <div class="voucher-box">
+                            <input type="text" id="voucherInput"
+                                   placeholder="Nhập mã..."
+                                   maxlength="10"
+                                   oninput="this.value=this.value.toUpperCase()">
+                            <button onclick="applyVoucher()" class="btn-apply">
+                                Áp dụng
+                            </button>
+                        </div>
+                        <div class="voucher-result" id="voucherResult"></div>
+                        <div class="voucher-hint">
+                            Mã thử: WELCOME10 · SALE20 · FREESHIP
+                        </div>
+                    </div>
+
+                    <div class="checkout-card">
+                        <h3>💰 Tổng thanh toán</h3>
+                        <div class="total-rows">
+                            <div class="total-row">
+                                <span>Tạm tính</span>
+                                <span id="sumSubtotal">—</span>
+                            </div>
+                            <div class="total-row">
+                                <span>VAT (10%)</span>
+                                <span id="sumVat">—</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Phí dịch vụ</span>
+                                <span id="sumSvc">—</span>
+                            </div>
+                            <div class="total-row discount"
+                                 id="discountRow"
+                                 style="display:none;">
+                                <span id="discountLabel">Giảm giá</span>
+                                <span id="sumDiscount"></span>
+                            </div>
+                        </div>
+                        <hr class="total-divider">
+                        <div class="total-final">
+                            <span class="total-final-label">TỔNG</span>
+                            <span class="total-final-amount"
+                                  id="sumTotal">—</span>
+                        </div>
+                    </div>
+
+                    <div class="checkout-card">
+                        <h3>💳 Phương thức thanh toán</h3>
+                        <div class="payment-methods">
+                            <button class="pay-method selected"
+                                    onclick="selectMethod('Cash', this)">
+                                <div class="pay-method-icon">💵</div>
+                                <div class="pay-method-name">Tiền mặt</div>
+                            </button>
+                            <button class="pay-method"
+                                    onclick="selectMethod('BankTransfer', this)">
+                                <div class="pay-method-icon">🏦</div>
+                                <div class="pay-method-name">Chuyển khoản</div>
+                            </button>
+                            <button class="pay-method"
+                                    onclick="selectMethod('Momo', this)">
+                                <div class="pay-method-icon">📱</div>
+                                <div class="pay-method-name">MoMo</div>
+                            </button>
+                            <button class="pay-method"
+                                    onclick="selectMethod('VnPay', this)">
+                                <div class="pay-method-icon">💳</div>
+                                <div class="pay-method-name">VNPay</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="doCheckout()" id="btnCheckout" class="btn-checkout">
+                        ✅ Xác nhận thanh toán
+                    </button>
+
+                    <div class="checkout-error-alert" id="checkoutError"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success screen -->
+        <div id="screenSuccess" style="display:none;">
+            <div class="checkout-card" style="max-width:480px;margin:0 auto;">
+                <div class="success-screen">
+                    <div class="success-icon-wrapper">
+                        <div class="success-icon">✅</div>
+                    </div>
+                    <div class="success-title">Thanh toán thành công!</div>
+                    <div class="success-sub">
+                        Cảm ơn quý khách. Hẹn gặp lại!
+                    </div>
+                    <div class="success-total" id="successTotal"></div>
+
+                    <!-- Mã hoá đơn -->
+                    <div id="invoiceCodeBadge" style="text-align:center;margin-bottom:16px;padding:8px 16px;background:linear-gradient(135deg,#f0f0ff,#e8f4ff);border-radius:12px;display:inline-block;width:auto;font-size:13px;font-weight:700;color:#4f46e5;letter-spacing:0.5px;">
+                        <span id="sucInvoiceCode">—</span>
+                    </div>
+
+                    <!-- Chi tiết -->
+                    <div class="booking-summary">
+                        <div class="summary-row">
+                            <span>Bàn</span>
+                            <strong id="sucTable">—</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>PTTT</span>
+                            <strong id="sucMethod">—</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Thời gian</span>
+                            <strong id="sucTime">—</strong>
+                        </div>
+                    </div>
+
+                    <div class="success-actions">
+                        <button onclick="downloadPdf()" id="btnPdf" class="btn-pdf">
+                            📄 Tải hoá đơn PDF
+                        </button>
+                        <button onclick="window.location.href='table-map.html'" class="btn-back-map">
+                            🪑 Về sơ đồ bàn
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+requireRole('Admin', 'Staff');
+document.getElementById('sidebarName').textContent = getFullName();
+
+// ── State ─────────────────────────────────────────────────────
+let currentOrder   = null;
+let selectedMethod = 'Cash';
+let discountAmount = 0;
+let paymentResult  = null;
+
+const fmt = (n) => n.toLocaleString('vi-VN') + 'đ';
+
+// ── Khởi động ─────────────────────────────────────────────────
+async function init() {
+    const orderId  = sessionStorage.getItem('currentOrderId');
+    const tableId  = sessionStorage.getItem('currentTableId');
+
+    if (!orderId && !tableId) {
+        showToast('Chưa có order, chọn bàn trước', 'error');
+        setTimeout(() => window.location.href = 'table-map.html', 1500);
+        return;
+    }
+
+    try {
+        // Lấy order từ orderId hoặc tableId
+        if (orderId) {
+            currentOrder = await orderApi.getById(parseInt(orderId));
+        } else {
+            currentOrder = await orderApi.getByTable(parseInt(tableId));
+            sessionStorage.setItem('currentOrderId', currentOrder.id);
+        }
+
+        renderCheckout();
+        document.getElementById('screenLoading').style.display  = 'none';
+        document.getElementById('screenCheckout').style.display = 'block';
+    } catch(e) {
+        document.getElementById('screenLoading').innerHTML = `
+            <div class="checkout-error">
+                <div class="checkout-error-icon">⚠️</div>
+                <div class="checkout-error-text">Không tải được order</div>
+                <div class="checkout-error-detail">${e.message}</div>
+                <button onclick="window.location.href='table-map.html'">
+                    ← Quay lại
+                </button>
+            </div>`;
+    }
+}
+
+// ── Render checkout ───────────────────────────────────────────
+function renderCheckout() {
+    document.getElementById('checkoutTitle').textContent =
+        `Thanh toán — ${currentOrder.tableName}`;
+    document.getElementById('checkoutSub').textContent =
+        `Order #${currentOrder.id} · ${currentOrder.details.length} món`;
+
+    // Danh sách món
+    const itemsEl = document.getElementById('checkoutItems');
+    itemsEl.innerHTML = currentOrder.details.map(d => `
+        <div class="checkout-item">
+            <div class="checkout-item-left">
+                <div class="checkout-item-name">${d.menuItemName}</div>
+                ${d.specialNote
+                    ? `<div class="checkout-item-note">
+                           📝 ${d.specialNote}
+                       </div>`
+                    : ''}
+            </div>
+            <div class="checkout-item-qty">x${d.quantity}</div>
+            <div class="checkout-item-price">
+                ${fmt(d.unitPrice * d.quantity)}
+            </div>
+        </div>
+    `).join('');
+
+    recalculate();
+}
+
+// ── Tính lại tổng ─────────────────────────────────────────────
+function recalculate() {
+    if (!currentOrder) return;
+
+    const subtotal  = currentOrder.totalAmount;
+    const vat       = Math.round(subtotal * 0.10);
+    const svcPct    = parseFloat(
+        document.getElementById('serviceFee').value);
+    const svcFee    = Math.round(subtotal * svcPct / 100);
+    const total     = subtotal + vat + svcFee - discountAmount;
+
+    document.getElementById('sumSubtotal').textContent = fmt(subtotal);
+    document.getElementById('sumVat').textContent      = fmt(vat);
+    document.getElementById('sumSvc').textContent      = fmt(svcFee);
+    document.getElementById('sumTotal').textContent    = fmt(total);
+}
+
+// ── Áp voucher ────────────────────────────────────────────────
+async function applyVoucher() {
+    const code    = document.getElementById('voucherInput').value.trim();
+    const resEl   = document.getElementById('voucherResult');
+    const subtotal = currentOrder.totalAmount;
+
+    if (!code) return;
+
+    try {
+        const r = await paymentApi.validateVoucher(code, subtotal);
+        resEl.style.display = 'block';
+
+        if (r.valid) {
+            resEl.className    = 'voucher-result ok';
+            resEl.textContent  = `✅ ${r.message}`;
+            discountAmount     = r.discountAmount;
+
+            document.getElementById('discountRow').style.display = 'flex';
+            document.getElementById('discountLabel').textContent =
+                `Voucher (${code})`;
+            document.getElementById('sumDiscount').textContent =
+                `−${fmt(discountAmount)}`;
+        } else {
+            resEl.className   = 'voucher-result err';
+            resEl.textContent = `❌ ${r.message}`;
+            discountAmount    = 0;
+            document.getElementById('discountRow').style.display = 'none';
+        }
+        recalculate();
+    } catch(e) {
+        resEl.className   = 'voucher-result err';
+        resEl.textContent = '❌ Lỗi kiểm tra voucher';
+        resEl.style.display = 'block';
+    }
+}
+
+// ── Chọn PTTT ────────────────────────────────────────────────
+function selectMethod(method, el) {
+    selectedMethod = method;
+    document.querySelectorAll('.pay-method')
+            .forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+// ── Thanh toán ────────────────────────────────────────────────
+async function doCheckout() {
+    const btn = document.getElementById('btnCheckout');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Đang xử lý...';
+
+    const errEl = document.getElementById('checkoutError');
+    errEl.style.display = 'none';
+
+    const svcPct = parseFloat(
+        document.getElementById('serviceFee').value);
+    const voucher = document.getElementById('voucherInput')
+                            .value.trim() || null;
+
+    try {
+        paymentResult = await paymentApi.create({
+            orderId:          currentOrder.id,
+            paymentMethod:    selectedMethod,
+            voucherCode:      voucher,
+            serviceFeePercent: svcPct,
+        });
+
+        showSuccess();
+    } catch(e) {
+        errEl.textContent   = '❌ ' + e.message;
+        errEl.style.display = 'block';
+        btn.disabled        = false;
+        btn.textContent     = '✅ Xác nhận thanh toán';
+    }
+}
+
+// ── Helper tạo mã hoá đơn riêng cho mỗi lần thanh toán ────
+function getPaymentCode() {
+    // Nếu API trả về paymentCode thì dùng luôn
+    if (paymentResult?.paymentCode) return paymentResult.paymentCode;
+    // Tự sinh mã theo format: HD-{YYMMDD}-{id}
+    const d = new Date();
+    const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    return `HD-${ds}-${String(paymentResult?.id || 0).padStart(4,'0')}`;
+}
+
+// ── Hiện success ──────────────────────────────────────────────
+function showSuccess() {
+    document.getElementById('screenCheckout').style.display = 'none';
+    document.getElementById('screenSuccess').style.display  = 'block';
+
+    document.getElementById('successTotal').textContent =
+        fmt(paymentResult.totalAmount);
+    document.getElementById('sucInvoiceCode').textContent =
+        `🧾 ${getPaymentCode()}`;
+    document.getElementById('sucTable').textContent   =
+        paymentResult.tableName;
+    document.getElementById('sucMethod').textContent  =
+        { Cash:'Tiền mặt', BankTransfer:'Chuyển khoản',
+          Momo:'MoMo', VnPay:'VNPay' }[paymentResult.method]
+        || paymentResult.method;
+    document.getElementById('sucTime').textContent    =
+        new Date(paymentResult.paidAt).toLocaleString('vi-VN');
+
+    // Xoá sessionStorage
+    sessionStorage.removeItem('currentOrderId');
+    sessionStorage.removeItem('currentTableId');
+
+    showToast('Thanh toán thành công! 🎉', 'success');
+}
+
+// ── Tải PDF ───────────────────────────────────────────────────
+async function downloadPdf() {
+    if (!paymentResult?.id) return;
+
+    const btn = document.getElementById('btnPdf');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Đang tải...';
+
+    try {
+        await paymentApi.downloadPdf(paymentResult.id);
+        showToast('📄 Đã tải hoá đơn PDF!', 'success');
+    } catch(e) {
+        showToast('❌ ' + e.message, 'error');
+    }
+
+    btn.disabled    = false;
+    btn.textContent = '📄 Tải hoá đơn PDF';
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${type}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+init();
+</script>
+</body>
+</html>

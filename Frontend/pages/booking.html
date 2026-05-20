@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Đặt bàn — RestaurantMS</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/booking.css">
 </head>
 <body>
 
@@ -225,8 +226,12 @@
 requireRole('Customer', 'Admin', 'Staff');
 document.getElementById('sidebarName').textContent = getFullName();
 
-// ── Điền sẵn tên từ tài khoản ────────────────────────────────
+// ── Điền sẵn tên & số điện thoại từ tài khoản ────────────────
 document.getElementById('b_name').value = getFullName();
+const savedPhone = getPhone();
+if (savedPhone) {
+    document.getElementById('b_phone').value = savedPhone;
+}
 
 // ── Số khách ─────────────────────────────────────────────────
 let guestCount = 2;
